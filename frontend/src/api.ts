@@ -4,7 +4,7 @@ import type {
   Stats, Paginated, FilterOptions, Dealer, MyStats
 } from './types'
 
-const api = axios.create({ baseURL: '/api' })
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
 
 // Dealers
 export const getDealers = (activeOnly = true) =>
