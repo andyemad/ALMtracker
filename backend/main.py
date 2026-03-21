@@ -276,11 +276,8 @@ async def startup():
     count = db.query(models.Vehicle).count()
     db.close()
     if count == 0:
-        logger.info("Empty DB — running initial scrape...")
-        loop = asyncio.get_event_loop()
-        db2 = SessionLocal()
-        await loop.run_in_executor(None, run_scrape, db2)
-        db2.close()
+        logger.info("Empty DB — scheduling initial scrape in background...")
+        asyncio.create_task(asyncio.to_thread(run_scrape, SessionLocal()))
 
     scheduler.add_job(
         lambda: run_scrape(SessionLocal()),
