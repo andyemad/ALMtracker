@@ -1,7 +1,6 @@
 frontend
 backend/venv
 backend/__pycache__
-backend/*.db
 backend/*.db-shm
 backend/*.db-wal
 backend/tests
