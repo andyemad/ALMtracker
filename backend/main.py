@@ -61,6 +61,35 @@ def health():
     return {"status": "ok"}
 
 
+@app.post("/api/import-data")
+def import_data(payload: dict, db: Session = Depends(get_db)):
+    """One-time bulk import of historical data from local database."""
+    import_key = os.getenv("IMPORT_KEY", "")
+    if not import_key or payload.get("key") != import_key:
+        raise HTTPException(status_code=403, detail="Invalid import key")
+
+    imported = {"vehicles": 0, "events": 0, "scrape_logs": 0}
+
+    for v in payload.get("vehicles", []):
+        exists = db.query(models.Vehicle).filter_by(
+            dealer_id=v.get("dealer_id"), stock_number=v.get("stock_number")
+        ).first()
+        if not exists:
+            db.add(models.Vehicle(**{k: v[k] for k in v if hasattr(models.Vehicle, k)}))
+            imported["vehicles"] += 1
+
+    for e in payload.get("events", []):
+        db.add(models.VehicleEvent(**{k: e[k] for k in e if hasattr(models.VehicleEvent, k) and k != "id"}))
+        imported["events"] += 1
+
+    for s in payload.get("scrape_logs", []):
+        db.add(models.ScrapeLog(**{k: s[k] for k in s if hasattr(models.ScrapeLog, k) and k != "id"}))
+        imported["scrape_logs"] += 1
+
+    db.commit()
+    return {"status": "ok", "imported": imported}
+
+
 
 # ─── Core Scrape Logic ────────────────────────────────────────────────────────
 
