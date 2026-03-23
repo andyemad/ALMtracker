@@ -24,7 +24,9 @@ export default function Activity() {
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
   const [eventType, setEventType] = useState(searchParams.get('event_type') ?? '')
-  const [days, setDays] = useState(+(searchParams.get('days') ?? '30'))
+  const validDays = [3, 7, 14, 30, 90]
+  const rawDays = +(searchParams.get('days') ?? '7')
+  const [days, setDays] = useState(validDays.includes(rawDays) ? rawDays : 7)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
@@ -116,6 +118,7 @@ export default function Activity() {
             value={days}
             onChange={e => { setDays(+e.target.value); setPage(1) }}
           >
+            <option value={3}>3 days</option>
             <option value={7}>7 days</option>
             <option value={14}>14 days</option>
             <option value={30}>30 days</option>
@@ -206,17 +209,21 @@ function EventItem({ ev }: { ev: VehicleEvent }) {
           )}
         </div>
 
-        {ev.event_type === 'price_change' && ev.old_value && ev.new_value && (
-          <p className="text-xs text-slate-400 mt-1">
-            <span className={Number(ev.new_value) < Number(ev.old_value) ? 'text-emerald-400' : 'text-slate-400'}>${Number(ev.old_value).toLocaleString()}</span>
-            <span className="mx-1">→</span>
-            <span className={Number(ev.new_value) < Number(ev.old_value) ? 'text-red-400' : 'text-emerald-400'}>${Number(ev.new_value).toLocaleString()}</span>
-            <span className="ml-1 text-slate-500">
-              ({Number(ev.new_value) < Number(ev.old_value) ? '↓' : '↑'}
-              ${Math.abs(Number(ev.new_value) - Number(ev.old_value)).toLocaleString()})
-            </span>
-          </p>
-        )}
+        {ev.event_type === 'price_change' && ev.old_value && ev.new_value && (() => {
+          const oldP = Number(ev.old_value)
+          const newP = Number(ev.new_value)
+          const dropped = newP < oldP
+          return (
+            <p className="text-xs text-slate-400 mt-1">
+              <span className="text-slate-400">${oldP.toLocaleString()}</span>
+              <span className="mx-1">→</span>
+              <span className={dropped ? 'text-red-400' : 'text-emerald-400'}>${newP.toLocaleString()}</span>
+              <span className={`ml-1 ${dropped ? 'text-red-500' : 'text-emerald-500'}`}>
+                ({dropped ? '↓' : '↑'} ${Math.abs(newP - oldP).toLocaleString()})
+              </span>
+            </p>
+          )
+        })()}
 
         <p className="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
           <span>Stock #{ev.stock_number}</span>
