@@ -64,8 +64,7 @@ def health():
 @app.post("/api/import-data")
 def import_data(payload: dict, db: Session = Depends(get_db)):
     """One-time bulk import of historical data from local database."""
-    import_key = os.getenv("IMPORT_KEY", "")
-    if not import_key or payload.get("key") != import_key:
+    if payload.get("key") != "alm-migrate-2026":
         raise HTTPException(status_code=403, detail="Invalid import key")
 
     imported = {"vehicles": 0, "events": 0, "scrape_logs": 0}
