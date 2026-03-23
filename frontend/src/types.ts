@@ -118,6 +118,7 @@ export interface Paginated<T> {
   page_size: number
   pages: number
   data: T[]
+  counts?: { added: number; removed: number; price_change: number }
 }
 
 export interface FilterOptions {
