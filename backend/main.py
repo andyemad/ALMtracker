@@ -25,17 +25,18 @@ logger = logging.getLogger(__name__)
 
 import os
 
-# Run schema migrations first, then create any missing tables
-try:
-    run_migrations(engine)
-except Exception as e:
-    logger.error(f"Migration failed (non-fatal): {e}", exc_info=True)
-
+# Create tables first, then run migrations to seed data and add indexes
 try:
     Base.metadata.create_all(bind=engine)
-    logger.info("Database initialized successfully")
+    logger.info("Tables created/verified successfully")
 except Exception as e:
     logger.error(f"Table creation failed: {e}", exc_info=True)
+
+try:
+    run_migrations(engine)
+    logger.info("Migrations completed successfully")
+except Exception as e:
+    logger.error(f"Migration failed (non-fatal): {e}", exc_info=True)
 
 _raw_origins = os.getenv(
     "ALLOWED_ORIGINS",
