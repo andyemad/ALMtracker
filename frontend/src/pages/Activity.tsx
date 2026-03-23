@@ -35,7 +35,7 @@ export default function Activity() {
       event_type: eventType || undefined,
       days,
       page,
-      page_size: 50,
+      page_size: 100,
       dealer_id: dealerId,
       search: debouncedSearch || undefined,
     }).then(r => {
@@ -146,14 +146,38 @@ export default function Activity() {
 
       {/* Pagination */}
       {pages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button onClick={() => setPage(p => p - 1)} disabled={page === 1} className="btn-ghost disabled:opacity-30">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm text-slate-400">Page {page} of {pages}</span>
-          <button onClick={() => setPage(p => p + 1)} disabled={page >= pages} className="btn-ghost disabled:opacity-30">
-            <ChevronRight className="w-4 h-4" />
-          </button>
+        <div className="flex items-center justify-between">
+          <span className="text-slate-400 text-xs">
+            {total.toLocaleString()} events · page {page} of {pages}
+          </span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(1)} disabled={page === 1} className="btn-ghost p-1.5 disabled:opacity-30 text-xs text-slate-400">
+              First
+            </button>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-ghost p-1.5 disabled:opacity-30">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            {Array.from({ length: Math.min(7, pages) }, (_, i) => {
+              const p = Math.max(1, Math.min(pages - 6, page - 3)) + i
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-7 h-7 rounded text-xs transition-colors ${
+                    p === page ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700'
+                  }`}
+                >
+                  {p}
+                </button>
+              )
+            })}
+            <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page >= pages} className="btn-ghost p-1.5 disabled:opacity-30">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <button onClick={() => setPage(pages)} disabled={page >= pages} className="btn-ghost p-1.5 disabled:opacity-30 text-xs text-slate-400">
+              Last
+            </button>
+          </div>
         </div>
       )}
     </div>
