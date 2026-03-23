@@ -25,8 +25,8 @@ export default function Activity() {
   const [pages, setPages] = useState(1)
   const [eventType, setEventType] = useState(searchParams.get('event_type') ?? '')
   const validDays = [3, 7, 14, 30, 90]
-  const rawDays = +(searchParams.get('days') ?? '7')
-  const [days, setDays] = useState(validDays.includes(rawDays) ? rawDays : 7)
+  const rawDays = +(searchParams.get('days') ?? '30')
+  const [days, setDays] = useState(validDays.includes(rawDays) ? rawDays : 30)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
