@@ -68,7 +68,7 @@ export default function Dashboard() {
       color: 'text-emerald-400',
       bg: 'bg-emerald-500/10',
       border: 'border-emerald-500/20',
-      to: '/activity?event_type=added&days=1' as string | null,
+      to: '/activity?event_type=added' as string | null,
     },
     {
       label: 'Removed Today',
@@ -77,7 +77,7 @@ export default function Dashboard() {
       color: 'text-red-400',
       bg: 'bg-red-500/10',
       border: 'border-red-500/20',
-      to: '/activity?event_type=removed&days=1' as string | null,
+      to: '/activity?event_type=removed' as string | null,
     },
     {
       label: 'Active Alerts',
