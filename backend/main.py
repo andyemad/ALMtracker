@@ -23,11 +23,15 @@ from scraper import DealerConfig, scrape_all_dealers
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-# Run schema migrations first, then create any missing tables
-run_migrations(engine)
-Base.metadata.create_all(bind=engine)
-
 import os
+
+# Run schema migrations first, then create any missing tables
+try:
+    run_migrations(engine)
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database initialized successfully")
+except Exception as e:
+    logger.error(f"Database initialization failed: {e}", exc_info=True)
 
 _raw_origins = os.getenv(
     "ALLOWED_ORIGINS",
@@ -45,6 +49,12 @@ app.add_middleware(
 )
 
 scheduler = AsyncIOScheduler()
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 
 
 # ─── Core Scrape Logic ────────────────────────────────────────────────────────
@@ -1193,6 +1203,13 @@ def list_scrape_logs(
 
 @app.post("/api/scrape/trigger")
 async def trigger_scrape(background_tasks: BackgroundTasks):
-    db = SessionLocal()
-    background_tasks.add_task(run_scrape, db)
+    def _safe_scrape():
+        db = SessionLocal()
+        try:
+            run_scrape(db)
+        except Exception as e:
+            logger.error(f"Background scrape failed: {e}", exc_info=True)
+        finally:
+            db.close()
+    background_tasks.add_task(_safe_scrape)
     return {"message": "Scrape triggered in background"}
