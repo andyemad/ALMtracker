@@ -28,10 +28,14 @@ import os
 # Run schema migrations first, then create any missing tables
 try:
     run_migrations(engine)
+except Exception as e:
+    logger.error(f"Migration failed (non-fatal): {e}", exc_info=True)
+
+try:
     Base.metadata.create_all(bind=engine)
     logger.info("Database initialized successfully")
 except Exception as e:
-    logger.error(f"Database initialization failed: {e}", exc_info=True)
+    logger.error(f"Table creation failed: {e}", exc_info=True)
 
 _raw_origins = os.getenv(
     "ALLOWED_ORIGINS",
