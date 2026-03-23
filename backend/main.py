@@ -282,9 +282,14 @@ def run_scrape(db: Session):
 
 @app.on_event("startup")
 async def startup():
-    db = SessionLocal()
-    count = db.query(models.Vehicle).count()
-    db.close()
+    try:
+        db = SessionLocal()
+        count = db.query(models.Vehicle).count()
+        db.close()
+    except Exception as e:
+        logger.warning(f"Could not query vehicles table (first run?): {e}")
+        count = 0
+
     if count == 0:
         logger.info("Empty DB — scheduling initial scrape in background...")
 

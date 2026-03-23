@@ -10,8 +10,7 @@ dist/
 build/
 *.egg
 
-# Database files (local only - do not commit)
-*.db
+# Database temp files
 *.db-shm
 *.db-wal
 *.db.backup*
