@@ -35,7 +35,7 @@ export default function Activity() {
       event_type: eventType || undefined,
       days,
       page,
-      page_size: 100,
+      page_size: 25,
       dealer_id: dealerId,
       search: debouncedSearch || undefined,
     }).then(r => {
