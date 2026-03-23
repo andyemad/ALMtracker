@@ -152,30 +152,44 @@ def run_scrape(db: Session):
                 for key, vdata in scraped_map.items():
                     stock = vdata["stock_number"]
                     if key in active_map:
-                        # Vehicle is currently active — check for price change
+                        # Vehicle is currently active — update fields + check for price change
                         existing = active_map[key]
                         existing.last_seen = datetime.utcnow()
                         existing.days_on_lot = (datetime.utcnow() - existing.first_seen).days
 
+                        # Always update mutable fields from the latest scrape
+                        for fld in ("mileage", "exterior_color", "interior_color",
+                                    "image_url", "listing_url", "condition",
+                                    "fuel_type", "transmission", "body_style"):
+                            new_val = vdata.get(fld)
+                            if new_val:
+                                setattr(existing, fld, new_val)
+
                         new_price = vdata.get("price")
-                        if new_price and existing.price and abs(new_price - existing.price) > 1:
-                            db.add(models.VehicleEvent(
-                                stock_number=stock,
-                                vin=existing.vin,
-                                dealer_id=dealer_id,
-                                location_name=config.name,
-                                event_type="price_change",
-                                description=f"Price change: {existing.year} {existing.make} {existing.model}",
-                                old_value=str(existing.price),
-                                new_value=str(new_price),
-                                year=existing.year,
-                                make=existing.make,
-                                model=existing.model,
-                                trim=existing.trim,
-                                price=new_price,
-                            ))
-                            existing.price = new_price
-                            price_changes += 1
+                        old_price = existing.price or 0
+                        # Detect price change (both must be non-zero), OR backfill if existing is 0
+                        if new_price and new_price > 0:
+                            if old_price > 0 and abs(new_price - old_price) > 1:
+                                db.add(models.VehicleEvent(
+                                    stock_number=stock,
+                                    vin=existing.vin,
+                                    dealer_id=dealer_id,
+                                    location_name=config.name,
+                                    event_type="price_change",
+                                    description=f"Price change: {existing.year} {existing.make} {existing.model}",
+                                    old_value=str(old_price),
+                                    new_value=str(new_price),
+                                    year=existing.year,
+                                    make=existing.make,
+                                    model=existing.model,
+                                    trim=existing.trim,
+                                    price=new_price,
+                                ))
+                                existing.price = new_price
+                                price_changes += 1
+                            elif old_price == 0:
+                                # Backfill: price was missing, now available
+                                existing.price = new_price
                     else:
                         # Not in active_map — check if it exists as inactive (soft-deleted)
                         # to avoid UNIQUE constraint violation on (dealer_id, stock_number)
@@ -193,9 +207,17 @@ def run_scrape(db: Session):
                             existing_inactive.is_active = True
                             existing_inactive.last_seen = datetime.utcnow()
                             existing_inactive.days_on_lot = 0
-                            existing_inactive.price = vdata.get("price") or existing_inactive.price
+                            new_price = vdata.get("price")
+                            if new_price and new_price > 0:
+                                existing_inactive.price = new_price
                             existing_inactive.image_url = vdata.get("image_url") or existing_inactive.image_url
                             existing_inactive.listing_url = vdata.get("listing_url") or existing_inactive.listing_url
+                            # Update other fields from fresh scrape data
+                            for fld in ("mileage", "exterior_color", "interior_color",
+                                        "condition", "fuel_type", "transmission", "body_style"):
+                                new_val = vdata.get(fld)
+                                if new_val:
+                                    setattr(existing_inactive, fld, new_val)
                         else:
                             # Genuinely new vehicle — insert
                             existing_inactive = models.Vehicle(
