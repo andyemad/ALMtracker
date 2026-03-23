@@ -23,6 +23,7 @@ export default function Activity() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [pages, setPages] = useState(1)
+  const [counts, setCounts] = useState({ added: 0, removed: 0, price_change: 0 })
   const [eventType, setEventType] = useState(searchParams.get('event_type') ?? '')
   const validDays = [3, 7, 14, 30, 90]
   const rawDays = +(searchParams.get('days') ?? '30')
@@ -44,14 +45,9 @@ export default function Activity() {
       setEvents(r.data)
       setTotal(r.total)
       setPages(r.pages)
+      if (r.counts) setCounts(r.counts)
     }).finally(() => setLoading(false))
   }, [eventType, days, page, dealerId, debouncedSearch])
-
-  const counts = {
-    added: events.filter(e => e.event_type === 'added').length,
-    removed: events.filter(e => e.event_type === 'removed').length,
-    price_change: events.filter(e => e.event_type === 'price_change').length,
-  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
@@ -78,7 +74,7 @@ export default function Activity() {
                 <s.Icon className={`w-4 h-4 ${s.color}`} />
               </div>
               <div className="text-xl font-bold text-white">{counts[type]}</div>
-              <div className="text-xs text-slate-400">{s.label} (this page)</div>
+              <div className="text-xs text-slate-400">{s.label}</div>
             </button>
           )
         })}
@@ -217,8 +213,8 @@ function EventItem({ ev }: { ev: VehicleEvent }) {
             <p className="text-xs text-slate-400 mt-1">
               <span className="text-slate-400">${oldP.toLocaleString()}</span>
               <span className="mx-1">→</span>
-              <span className={dropped ? 'text-red-400' : 'text-emerald-400'}>${newP.toLocaleString()}</span>
-              <span className={`ml-1 ${dropped ? 'text-red-500' : 'text-emerald-500'}`}>
+              <span className={dropped ? 'text-emerald-400' : 'text-red-400'}>${newP.toLocaleString()}</span>
+              <span className={`ml-1 ${dropped ? 'text-emerald-500' : 'text-red-500'}`}>
                 ({dropped ? '↓' : '↑'} ${Math.abs(newP - oldP).toLocaleString()})
               </span>
             </p>

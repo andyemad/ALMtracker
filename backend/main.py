@@ -1021,26 +1021,43 @@ def list_events(
     page_size: int = 50,
 ):
     since = datetime.utcnow() - timedelta(days=days)
-    q = db.query(models.VehicleEvent).filter(models.VehicleEvent.timestamp >= since)
-    q = _exclude_currently_active_removals(q, db)
+
+    # Base query scoped by time + dealer + search (NO event_type filter)
+    base = db.query(models.VehicleEvent).filter(models.VehicleEvent.timestamp >= since)
+    base = _exclude_currently_active_removals(base, db)
     if dealer_id is not None:
-        q = q.filter(models.VehicleEvent.dealer_id == dealer_id)
-    if event_type:
-        q = q.filter(models.VehicleEvent.event_type == event_type)
+        base = base.filter(models.VehicleEvent.dealer_id == dealer_id)
     if search:
         pat = f"%{search}%"
-        q = q.filter(or_(
+        base = base.filter(or_(
             models.VehicleEvent.stock_number.ilike(pat),
             models.VehicleEvent.vin.ilike(pat),
             models.VehicleEvent.make.ilike(pat),
             models.VehicleEvent.model.ilike(pat),
         ))
+
+    # Counts per event type (always computed from unfiltered base)
+    type_counts = dict(
+        base.with_entities(models.VehicleEvent.event_type, func.count())
+        .group_by(models.VehicleEvent.event_type)
+        .all()
+    )
+    counts = {
+        "added": type_counts.get("added", 0),
+        "removed": type_counts.get("removed", 0),
+        "price_change": type_counts.get("price_change", 0),
+    }
+
+    # Now apply event_type filter for pagination
+    q = base
+    if event_type:
+        q = q.filter(models.VehicleEvent.event_type == event_type)
     q = q.order_by(desc(models.VehicleEvent.timestamp))
 
     total = q.count()
     pages = max(1, (total + page_size - 1) // page_size)
     items = q.offset((page - 1) * page_size).limit(page_size).all()
-    return {"total": total, "pages": pages, "page": page, "data": [_event_dict(e) for e in items]}
+    return {"total": total, "pages": pages, "page": page, "counts": counts, "data": [_event_dict(e) for e in items]}
 
 
 # ─── Routes: Watchlist ────────────────────────────────────────────────────────
