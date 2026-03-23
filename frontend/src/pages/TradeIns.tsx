@@ -130,7 +130,17 @@ export default function TradeIns() {
       accessorKey: 'stock_number',
       header: 'Stock #',
       size: 120,
-      cell: ({ getValue }) => <StockCell stock={getValue() as string} />,
+      cell: ({ row }) => (
+        <a
+          href={row.original.listing_url || `https://www.almcars.com/inventory/${(row.original.stock_number || '').toLowerCase()}`}
+          target="_blank"
+          rel="noreferrer"
+          className="hover:underline"
+          onClick={e => e.stopPropagation()}
+        >
+          <StockCell stock={row.original.stock_number} />
+        </a>
+      ),
     },
     {
       accessorKey: 'year',
@@ -270,6 +280,28 @@ export default function TradeIns() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
+
+        {/* Quick Sort */}
+        <select
+          className="select w-auto text-xs"
+          value={sorting[0] ? `${sorting[0].id}_${sorting[0].desc ? 'desc' : 'asc'}` : 'first_seen_desc'}
+          onChange={e => {
+            const [id, dir] = e.target.value.split('_')
+            setSorting([{ id, desc: dir === 'desc' }])
+            resetPage()
+          }}
+        >
+          <option value="first_seen_desc">Recently Added</option>
+          <option value="first_seen_asc">Oldest Added</option>
+          <option value="price_desc">Price: High → Low</option>
+          <option value="price_asc">Price: Low → High</option>
+          <option value="days_on_lot_desc">Days: Most → Least</option>
+          <option value="days_on_lot_asc">Days: Least → Most</option>
+          <option value="year_desc">Year: Newest</option>
+          <option value="year_asc">Year: Oldest</option>
+          <option value="mileage_asc">Mileage: Low → High</option>
+          <option value="mileage_desc">Mileage: High → Low</option>
+        </select>
 
         {/* Filter Toggle */}
         <button
