@@ -965,6 +965,7 @@ def list_events(
     db: Session = Depends(get_db),
     dealer_id: Optional[int] = None,
     event_type: Optional[str] = None,
+    search: Optional[str] = None,
     days: int = 30,
     page: int = 1,
     page_size: int = 50,
@@ -976,11 +977,20 @@ def list_events(
         q = q.filter(models.VehicleEvent.dealer_id == dealer_id)
     if event_type:
         q = q.filter(models.VehicleEvent.event_type == event_type)
+    if search:
+        pat = f"%{search}%"
+        q = q.filter(or_(
+            models.VehicleEvent.stock_number.ilike(pat),
+            models.VehicleEvent.vin.ilike(pat),
+            models.VehicleEvent.make.ilike(pat),
+            models.VehicleEvent.model.ilike(pat),
+        ))
     q = q.order_by(desc(models.VehicleEvent.timestamp))
 
     total = q.count()
+    pages = max(1, (total + page_size - 1) // page_size)
     items = q.offset((page - 1) * page_size).limit(page_size).all()
-    return {"total": total, "data": [_event_dict(e) for e in items]}
+    return {"total": total, "pages": pages, "page": page, "data": [_event_dict(e) for e in items]}
 
 
 # ─── Routes: Watchlist ────────────────────────────────────────────────────────
