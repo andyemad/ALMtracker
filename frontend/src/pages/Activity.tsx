@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { formatDistanceToNow, format } from 'date-fns'
-import { TrendingUp, TrendingDown, DollarSign, Filter, ChevronLeft, ChevronRight, MapPin, Search } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Filter, ChevronLeft, ChevronRight, MapPin, Search, ExternalLink } from 'lucide-react'
 import { getEvents } from '../api'
 import type { VehicleEvent } from '../types'
 import { useDealer } from '../context/DealerContext'
@@ -229,13 +229,26 @@ function EventItem({ ev }: { ev: VehicleEvent }) {
         </p>
       </div>
 
-      <div className="text-right flex-shrink-0">
-        <p className="text-xs text-slate-400">
-          {formatDistanceToNow(new Date(ev.timestamp + 'Z'), { addSuffix: true })}
-        </p>
-        <p className="text-[11px] text-slate-600 mt-0.5">
-          {format(new Date(ev.timestamp + 'Z'), 'MMM d, h:mm a')}
-        </p>
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {ev.stock_number && (
+          <a
+            href={`https://www.almcars.com/inventory/${ev.stock_number.toLowerCase()}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-400 hover:text-brand-300 transition-colors"
+            title="View listing"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        )}
+        <div className="text-right">
+          <p className="text-xs text-slate-400">
+            {formatDistanceToNow(new Date(ev.timestamp + 'Z'), { addSuffix: true })}
+          </p>
+          <p className="text-[11px] text-slate-600 mt-0.5">
+            {format(new Date(ev.timestamp + 'Z'), 'MMM d, h:mm a')}
+          </p>
+        </div>
       </div>
     </div>
   )
