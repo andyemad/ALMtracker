@@ -190,7 +190,7 @@ export default function Watchlist() {
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs text-slate-400 mb-1.5">
-                Email Notification <span className="text-slate-600">(optional — configure SMTP in .env)</span>
+                Email Notification <span className="text-slate-600">(get emailed when a match lands)</span>
               </label>
               <input className="input" type="email" placeholder="you@example.com" value={form.notification_email} onChange={f('notification_email')} />
             </div>
