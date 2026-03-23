@@ -208,9 +208,9 @@ function EventItem({ ev }: { ev: VehicleEvent }) {
 
         {ev.event_type === 'price_change' && ev.old_value && ev.new_value && (
           <p className="text-xs text-slate-400 mt-1">
-            <span className="text-red-400">${Number(ev.old_value).toLocaleString()}</span>
+            <span className={Number(ev.new_value) < Number(ev.old_value) ? 'text-emerald-400' : 'text-slate-400'}>${Number(ev.old_value).toLocaleString()}</span>
             <span className="mx-1">→</span>
-            <span className="text-emerald-400">${Number(ev.new_value).toLocaleString()}</span>
+            <span className={Number(ev.new_value) < Number(ev.old_value) ? 'text-red-400' : 'text-emerald-400'}>${Number(ev.new_value).toLocaleString()}</span>
             <span className="ml-1 text-slate-500">
               ({Number(ev.new_value) < Number(ev.old_value) ? '↓' : '↑'}
               ${Math.abs(Number(ev.new_value) - Number(ev.old_value)).toLocaleString()})
