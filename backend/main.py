@@ -277,7 +277,15 @@ async def startup():
     db.close()
     if count == 0:
         logger.info("Empty DB — scheduling initial scrape in background...")
-        asyncio.create_task(asyncio.to_thread(run_scrape, SessionLocal()))
+
+        async def _safe_initial_scrape():
+            try:
+                await asyncio.to_thread(run_scrape, SessionLocal())
+                logger.info("Initial background scrape completed successfully")
+            except Exception as e:
+                logger.error(f"Initial background scrape failed (non-fatal): {e}")
+
+        asyncio.create_task(_safe_initial_scrape())
 
     scheduler.add_job(
         lambda: run_scrape(SessionLocal()),
