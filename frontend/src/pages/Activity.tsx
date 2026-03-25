@@ -14,6 +14,8 @@ const EVENT_ICONS = {
   price_change: { Icon: DollarSign, color: 'text-amber-400', bg: 'bg-amber-500/10', badge: 'badge-price', label: 'Price Change' },
 }
 
+const PAGE_SIZE = 25
+
 export default function Activity() {
   const { selectedDealer } = useDealer()
   const dealerId = selectedDealer?.id
@@ -38,7 +40,7 @@ export default function Activity() {
       event_type: eventType || undefined,
       days,
       page,
-      page_size: 25,
+      page_size: PAGE_SIZE,
       dealer_id: dealerId,
       search: debouncedSearch || undefined,
     }).then(r => {
@@ -61,7 +63,7 @@ export default function Activity() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {(['added', 'removed', 'price_change'] as const).map(type => {
-          const s = EVENT_ICONS[type]
+          const style = EVENT_ICONS[type]
           return (
             <button
               key={type}
@@ -70,11 +72,11 @@ export default function Activity() {
                 eventType === type ? 'ring-1 ring-brand-500 border-brand-500/50' : ''
               }`}
             >
-              <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center mb-2`}>
-                <s.Icon className={`w-4 h-4 ${s.color}`} />
+              <div className={`w-8 h-8 rounded-lg ${style.bg} flex items-center justify-center mb-2`}>
+                <style.Icon className={`w-4 h-4 ${style.color}`} />
               </div>
               <div className="text-xl font-bold text-white">{counts[type]}</div>
-              <div className="text-xs text-slate-400">{s.label}</div>
+              <div className="text-xs text-slate-400">{style.label}</div>
             </button>
           )
         })}
@@ -183,19 +185,35 @@ export default function Activity() {
   )
 }
 
+function PriceChangeDetail({ oldValue, newValue }: { oldValue: string; newValue: string }) {
+  const oldP = Number(oldValue)
+  const newP = Number(newValue)
+  const dropped = newP < oldP
+  return (
+    <p className="text-xs text-slate-400 mt-1">
+      <span className="text-slate-400">${oldP.toLocaleString()}</span>
+      <span className="mx-1">→</span>
+      <span className={dropped ? 'text-emerald-400' : 'text-red-400'}>${newP.toLocaleString()}</span>
+      <span className={`ml-1 ${dropped ? 'text-emerald-500' : 'text-red-500'}`}>
+        ({dropped ? '↓' : '↑'} ${Math.abs(newP - oldP).toLocaleString()})
+      </span>
+    </p>
+  )
+}
+
 function EventItem({ ev }: { ev: VehicleEvent }) {
-  const s = EVENT_ICONS[ev.event_type] ?? EVENT_ICONS.added
+  const style = EVENT_ICONS[ev.event_type] ?? EVENT_ICONS.added
   const fmt$ = (n: number | null) => n ? `$${n.toLocaleString()}` : null
 
   return (
     <div className="p-4 flex items-start gap-4 hover:bg-slate-700/20 transition-colors">
-      <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-        <s.Icon className={`w-4 h-4 ${s.color}`} />
+      <div className={`w-8 h-8 rounded-lg ${style.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+        <style.Icon className={`w-4 h-4 ${style.color}`} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${s.badge}`}>
-            {s.label}
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${style.badge}`}>
+            {style.label}
           </span>
           <p className="text-sm text-slate-200 font-medium">
             {[ev.year, ev.make, ev.model, ev.trim].filter(Boolean).join(' ')}
@@ -205,21 +223,9 @@ function EventItem({ ev }: { ev: VehicleEvent }) {
           )}
         </div>
 
-        {ev.event_type === 'price_change' && ev.old_value && ev.new_value && (() => {
-          const oldP = Number(ev.old_value)
-          const newP = Number(ev.new_value)
-          const dropped = newP < oldP
-          return (
-            <p className="text-xs text-slate-400 mt-1">
-              <span className="text-slate-400">${oldP.toLocaleString()}</span>
-              <span className="mx-1">→</span>
-              <span className={dropped ? 'text-emerald-400' : 'text-red-400'}>${newP.toLocaleString()}</span>
-              <span className={`ml-1 ${dropped ? 'text-emerald-500' : 'text-red-500'}`}>
-                ({dropped ? '↓' : '↑'} ${Math.abs(newP - oldP).toLocaleString()})
-              </span>
-            </p>
-          )
-        })()}
+        {ev.event_type === 'price_change' && ev.old_value && ev.new_value && (
+          <PriceChangeDetail oldValue={ev.old_value} newValue={ev.new_value} />
+        )}
 
         <p className="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
           <span>Stock #{ev.stock_number}</span>

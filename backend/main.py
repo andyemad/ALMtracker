@@ -61,36 +61,22 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/api/import-data")
-def import_data(payload: dict, db: Session = Depends(get_db)):
-    """One-time bulk import of historical data from local database."""
-    if payload.get("key") != "alm-migrate-2026":
-        raise HTTPException(status_code=403, detail="Invalid import key")
-
-    imported = {"vehicles": 0, "events": 0, "scrape_logs": 0}
-
-    for v in payload.get("vehicles", []):
-        exists = db.query(models.Vehicle).filter_by(
-            dealer_id=v.get("dealer_id"), stock_number=v.get("stock_number")
-        ).first()
-        if not exists:
-            db.add(models.Vehicle(**{k: v[k] for k in v if hasattr(models.Vehicle, k)}))
-            imported["vehicles"] += 1
-
-    for e in payload.get("events", []):
-        db.add(models.VehicleEvent(**{k: e[k] for k in e if hasattr(models.VehicleEvent, k) and k != "id"}))
-        imported["events"] += 1
-
-    for s in payload.get("scrape_logs", []):
-        db.add(models.ScrapeLog(**{k: s[k] for k in s if hasattr(models.ScrapeLog, k) and k != "id"}))
-        imported["scrape_logs"] += 1
-
-    db.commit()
-    return {"status": "ok", "imported": imported}
-
-
 
 # ─── Core Scrape Logic ────────────────────────────────────────────────────────
+
+MUTABLE_VEHICLE_FIELDS = (
+    "mileage", "exterior_color", "interior_color", "image_url",
+    "listing_url", "condition", "fuel_type", "transmission", "body_style",
+)
+
+
+def _update_vehicle_fields(vehicle, vdata: dict):
+    """Overwrite mutable fields on a Vehicle from fresh scrape data."""
+    for fld in MUTABLE_VEHICLE_FIELDS:
+        new_val = vdata.get(fld)
+        if new_val:
+            setattr(vehicle, fld, new_val)
+
 
 def _load_dealer_configs(db: Session) -> list[DealerConfig]:
     """Load all active dealers from DB and convert to DealerConfig objects."""
@@ -157,13 +143,7 @@ def run_scrape(db: Session):
                         existing.last_seen = datetime.utcnow()
                         existing.days_on_lot = (datetime.utcnow() - existing.first_seen).days
 
-                        # Always update mutable fields from the latest scrape
-                        for fld in ("mileage", "exterior_color", "interior_color",
-                                    "image_url", "listing_url", "condition",
-                                    "fuel_type", "transmission", "body_style"):
-                            new_val = vdata.get(fld)
-                            if new_val:
-                                setattr(existing, fld, new_val)
+                        _update_vehicle_fields(existing, vdata)
 
                         new_price = vdata.get("price")
                         old_price = existing.price or 0
@@ -210,17 +190,10 @@ def run_scrape(db: Session):
                             new_price = vdata.get("price")
                             if new_price and new_price > 0:
                                 existing_inactive.price = new_price
-                            existing_inactive.image_url = vdata.get("image_url") or existing_inactive.image_url
-                            existing_inactive.listing_url = vdata.get("listing_url") or existing_inactive.listing_url
-                            # Update other fields from fresh scrape data
-                            for fld in ("mileage", "exterior_color", "interior_color",
-                                        "condition", "fuel_type", "transmission", "body_style"):
-                                new_val = vdata.get(fld)
-                                if new_val:
-                                    setattr(existing_inactive, fld, new_val)
+                            _update_vehicle_fields(existing_inactive, vdata)
                         else:
                             # Genuinely new vehicle — insert
-                            existing_inactive = models.Vehicle(
+                            new_vehicle = models.Vehicle(
                                 vin=vdata.get("vin", ""),
                                 stock_number=stock,
                                 dealer_id=dealer_id,
@@ -243,7 +216,7 @@ def run_scrape(db: Session):
                                 first_seen=datetime.utcnow(),
                                 last_seen=datetime.utcnow(),
                             )
-                            db.add(existing_inactive)
+                            db.add(new_vehicle)
                         db.add(models.VehicleEvent(
                             stock_number=stock,
                             vin=vdata.get("vin", ""),
