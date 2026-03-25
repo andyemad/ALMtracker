@@ -692,26 +692,25 @@ def get_stats(
         .scalar()
     )
 
-    lq = db.query(models.ScrapeLog)
-    if dealer_id is not None:
-        lq = lq.filter(models.ScrapeLog.dealer_id == dealer_id)
-    else:
-        lq = lq.filter(models.ScrapeLog.dealer_id.is_(None))
-    last_log = lq.order_by(desc(models.ScrapeLog.timestamp)).first()
+    # Scrape logs are global (dealer_id=NULL) — always query the global logs
+    last_log = (
+        db.query(models.ScrapeLog)
+        .filter(models.ScrapeLog.dealer_id.is_(None))
+        .order_by(desc(models.ScrapeLog.timestamp))
+        .first()
+    )
 
     two_weeks_ago = datetime.utcnow() - timedelta(days=14)
-    trend_q = (
+    trend_logs = (
         db.query(models.ScrapeLog)
         .filter(
             models.ScrapeLog.timestamp >= two_weeks_ago,
             models.ScrapeLog.status == "success",
+            models.ScrapeLog.dealer_id.is_(None),
         )
+        .order_by(asc(models.ScrapeLog.timestamp))
+        .all()
     )
-    if dealer_id is not None:
-        trend_q = trend_q.filter(models.ScrapeLog.dealer_id == dealer_id)
-    else:
-        trend_q = trend_q.filter(models.ScrapeLog.dealer_id.is_(None))
-    trend_logs = trend_q.order_by(asc(models.ScrapeLog.timestamp)).all()
 
     result = {
         "total_active": total_active,
