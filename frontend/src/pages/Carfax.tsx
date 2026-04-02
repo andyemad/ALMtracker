@@ -116,8 +116,8 @@ export default function Carfax() {
               </div>
               <h2 className="mt-3 text-2xl font-semibold text-white">Stock number in, CARFAX out</h2>
               <p className="mt-2 max-w-2xl text-sm text-slate-300">
-                The app checks the matching ALM inventory record, opens the public listing behind the scenes,
-                and pulls the embedded CARFAX link for you.
+                The app checks the matching ALM inventory record first, then falls back to ALM's live public inventory
+                if the local snapshot does not have the unit yet.
               </p>
             </div>
 

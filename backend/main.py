@@ -19,7 +19,15 @@ from alerts import check_and_notify_watchlist, get_matching_vehicles
 from carfax import resolve_vehicle_carfax
 from database import Base, SessionLocal, engine, get_db
 from migrations import run_migrations
-from scraper import DealerConfig, scrape_all_dealers
+from scraper import (
+    DEALER_REGISTRY,
+    DealerConfig,
+    _extract,
+    _fetch_dealer_filtered,
+    _fetch_page,
+    normalize_vehicle,
+    scrape_all_dealers,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -469,6 +477,145 @@ def _find_carfax_matches(
         .order_by(desc(models.Vehicle.last_seen), desc(models.Vehicle.id))
         .all()
     )
+
+
+def _upsert_live_vehicle_match(db: Session, vdata: dict) -> models.Vehicle:
+    dealer_id = vdata.get("dealer_id")
+    stock_number = (vdata.get("stock_number") or "").strip()
+    vin = (vdata.get("vin") or "").strip()
+
+    vehicle: Optional[models.Vehicle] = None
+    if dealer_id is not None and stock_number:
+        vehicle = (
+            db.query(models.Vehicle)
+            .filter(
+                models.Vehicle.dealer_id == dealer_id,
+                models.Vehicle.stock_number == stock_number,
+            )
+            .order_by(desc(models.Vehicle.id))
+            .first()
+        )
+
+    if vehicle is None and vin:
+        q = db.query(models.Vehicle).filter(models.Vehicle.vin == vin)
+        if dealer_id is not None:
+            q = q.filter(models.Vehicle.dealer_id == dealer_id)
+        vehicle = q.order_by(desc(models.Vehicle.last_seen), desc(models.Vehicle.id)).first()
+
+    now = datetime.utcnow()
+    location_name = (
+        vdata.get("location_name")
+        or DEALER_REGISTRY.get(dealer_id, {}).get("name")
+        or None
+    )
+
+    if vehicle is None:
+        vehicle = models.Vehicle(
+            vin=vin or None,
+            stock_number=stock_number,
+            dealer_id=dealer_id,
+            location_name=location_name,
+            year=vdata.get("year") or None,
+            make=vdata.get("make") or None,
+            model=vdata.get("model") or None,
+            trim=vdata.get("trim") or None,
+            price=vdata.get("price"),
+            mileage=vdata.get("mileage"),
+            exterior_color=vdata.get("exterior_color") or None,
+            interior_color=vdata.get("interior_color") or None,
+            body_style=vdata.get("body_style") or None,
+            condition=vdata.get("condition") or None,
+            fuel_type=vdata.get("fuel_type") or None,
+            transmission=vdata.get("transmission") or None,
+            image_url=vdata.get("image_url") or None,
+            listing_url=vdata.get("listing_url") or None,
+            is_active=True,
+            first_seen=now,
+            last_seen=now,
+            days_on_lot=0,
+        )
+        db.add(vehicle)
+    else:
+        vehicle.vin = vin or vehicle.vin
+        vehicle.stock_number = stock_number or vehicle.stock_number
+        vehicle.dealer_id = dealer_id if dealer_id is not None else vehicle.dealer_id
+        vehicle.location_name = location_name or vehicle.location_name
+        vehicle.year = vdata.get("year") or vehicle.year
+        vehicle.make = vdata.get("make") or vehicle.make
+        vehicle.model = vdata.get("model") or vehicle.model
+        vehicle.trim = vdata.get("trim") or vehicle.trim
+        vehicle.price = vdata.get("price") if vdata.get("price") is not None else vehicle.price
+        vehicle.is_active = True
+        vehicle.last_seen = now
+        if vehicle.first_seen is None:
+            vehicle.first_seen = now
+        _update_vehicle_fields(vehicle, vdata)
+
+    db.commit()
+    db.refresh(vehicle)
+    return vehicle
+
+
+def _find_live_carfax_matches(
+    db: Session,
+    query: str,
+    dealer_id: Optional[int] = None,
+) -> list[models.Vehicle]:
+    normalized = query.strip().upper()
+    if not normalized:
+        return []
+
+    matches: list[models.Vehicle] = []
+    seen_keys: set[tuple[Optional[int], str]] = set()
+
+    def _collect(vdata: dict):
+        stock_number = (vdata.get("stock_number") or "").strip().upper()
+        vin = (vdata.get("vin") or "").strip().upper()
+        if normalized not in {stock_number, vin}:
+            return
+
+        dedupe_key = (vdata.get("dealer_id"), stock_number or vin)
+        if dedupe_key in seen_keys:
+            return
+
+        seen_keys.add(dedupe_key)
+        matches.append(_upsert_live_vehicle_match(db, vdata))
+
+    if dealer_id is not None:
+        for vdata in _fetch_dealer_filtered(dealer_id):
+            _collect(vdata)
+        logger.info(
+            "Live CARFAX fallback for %s at dealer_id=%s returned %s match(es)",
+            normalized,
+            dealer_id,
+            len(matches),
+        )
+        return matches
+
+    offset = 0
+    total = None
+    while True:
+        page = _fetch_page(offset=offset)
+        if page is None:
+            break
+
+        results, total = _extract(page)
+        if not results:
+            break
+
+        for raw_vehicle in results:
+            _collect(normalize_vehicle(raw_vehicle))
+
+        offset += len(results)
+        if total and offset >= total:
+            break
+
+    logger.info(
+        "Live CARFAX fallback for %s returned %s match(es)",
+        normalized,
+        len(matches),
+    )
+    return matches
 
 
 def _alert_dict(a: models.WatchlistAlert) -> dict:
@@ -960,6 +1107,8 @@ def lookup_carfax(
             raise HTTPException(404, "Vehicle not found")
     else:
         matches = _find_carfax_matches(db, normalized_query, dealer_id)
+        if not matches:
+            matches = _find_live_carfax_matches(db, normalized_query, dealer_id)
         if not matches:
             raise HTTPException(404, "No active vehicle found for that stock number or VIN")
         if len(matches) > 1:

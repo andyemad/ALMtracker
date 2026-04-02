@@ -128,3 +128,72 @@ class TestCarfaxLookup:
         assert data["cached"] is False
         assert data["carfax_url"].endswith("LIVE123")
         assert data["vehicle"]["carfax_url"].endswith("LIVE123")
+
+    def test_falls_back_to_live_inventory_when_local_snapshot_misses(self, client, db, make_dealer):
+        make_dealer(id=323, name="ALM Mall of Georgia", city="Buford")
+        vehicle = make_vehicle(
+            db,
+            stock_number="FALLBACK123",
+            vin="1HGCM82633A765499",
+            dealer_id=323,
+            location_name="ALM Mall of Georgia",
+            listing_url="https://www.almcars.com/inventory/fallback123",
+            carfax_url=None,
+        )
+
+        def fake_resolver(db_session, target_vehicle, *, force_refresh=False):
+            assert target_vehicle.id == vehicle.id
+            target_vehicle.carfax_url = "https://www.carfax.com/VehicleHistory/ar20/FALLBACK123"
+            target_vehicle.carfax_fetched_at = datetime.utcnow()
+            db_session.add(target_vehicle)
+            db_session.commit()
+            db_session.refresh(target_vehicle)
+            return CarfaxResolution(
+                carfax_url=target_vehicle.carfax_url,
+                listing_url=target_vehicle.listing_url,
+                source_url=target_vehicle.listing_url,
+            )
+
+        with patch("main._find_carfax_matches", return_value=[]), \
+             patch("main._find_live_carfax_matches", return_value=[vehicle]) as live_matches, \
+             patch("main.resolve_vehicle_carfax", side_effect=fake_resolver) as resolver:
+            r = client.get("/api/carfax", params={"query": "FALLBACK123"})
+
+        assert r.status_code == 200
+        live_matches.assert_called_once()
+        resolver.assert_called_once()
+
+        data = r.json()
+        assert data["status"] == "resolved"
+        assert data["cached"] is False
+        assert data["carfax_url"].endswith("FALLBACK123")
+
+    def test_returns_live_ambiguous_matches_when_snapshot_misses(self, client, db, make_dealer):
+        make_dealer(id=323, name="ALM Mall of Georgia", city="Buford")
+        make_dealer(id=324, name="ALM Marietta", city="Marietta")
+
+        first = make_vehicle(
+            db,
+            stock_number="LIVEAMB1",
+            vin="VIN00000000000111",
+            dealer_id=323,
+            location_name="ALM Mall of Georgia",
+        )
+        second = make_vehicle(
+            db,
+            stock_number="LIVEAMB1",
+            vin="VIN00000000000112",
+            dealer_id=324,
+            location_name="ALM Marietta",
+        )
+
+        with patch("main._find_carfax_matches", return_value=[]), \
+             patch("main._find_live_carfax_matches", return_value=[first, second]) as live_matches:
+            r = client.get("/api/carfax", params={"query": "LIVEAMB1"})
+
+        assert r.status_code == 200
+        live_matches.assert_called_once()
+
+        data = r.json()
+        assert data["status"] == "ambiguous"
+        assert len(data["matches"]) == 2

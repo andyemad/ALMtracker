@@ -7,7 +7,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, BarChart, Bar
 } from 'recharts'
-import { formatDistanceToNow } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 import { getStats, getEvents, getScrapeLogs, getVehicles } from '../api'
 import type { Stats, VehicleEvent, ScrapeLog, Vehicle } from '../types'
 import { useDealer } from '../context/DealerContext'
@@ -105,7 +105,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="text-slate-400 text-sm mt-0.5">
-          {selectedDealer ? `${selectedDealer.name} · ${selectedDealer.city}` : 'All 24 ALM Locations'} — live inventory intel
+          {selectedDealer ? `${selectedDealer.name} · ${selectedDealer.city}` : 'All 24 ALM Locations'} — inventory snapshot and recent movement
         </p>
         </div>
         <ScrapeStatus stats={stats} scraping={scraping} />
@@ -246,13 +246,25 @@ function ScrapeStatus({ stats, scraping }: { stats: Stats | null; scraping: bool
     )
   }
   if (!stats?.last_scrape) return null
+  const lastScrape = new Date(`${stats.last_scrape}Z`)
   const ok = stats.last_scrape_status === 'success'
+  const stale = ok && Date.now() - lastScrape.getTime() > 12 * 60 * 60 * 1000
+  const tone = !ok
+    ? 'bg-red-500/10 text-red-400 border-red-500/30'
+    : stale
+      ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+  const Icon = !ok ? XCircle : stale ? AlertCircle : CheckCircle
+  const label = !ok ? 'Last sync failed' : stale ? 'Snapshot last synced' : 'Last sync'
   return (
-    <div className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border
-      ${ok ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-            : 'bg-red-500/10 text-red-400 border-red-500/30'}`}>
-      {ok ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-      Last sync {formatDistanceToNow(new Date(stats.last_scrape + 'Z'), { addSuffix: true })}
+    <div className={`rounded-xl border px-3 py-2 ${tone}`}>
+      <div className="flex items-center gap-2 text-xs">
+        <Icon className="h-3 w-3" />
+        <span>{label} {formatDistanceToNow(lastScrape, { addSuffix: true })}</span>
+      </div>
+      <p className="mt-1 text-[11px] text-slate-300">
+        {format(lastScrape, "MMM d, yyyy 'at' h:mm a 'UTC'")}
+      </p>
     </div>
   )
 }

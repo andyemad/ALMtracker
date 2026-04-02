@@ -25,7 +25,7 @@ export default function App() {
 }
 
 const ROUTE_META: Record<string, { title: string; subtitle: string }> = {
-  '/dashboard': { title: 'Dashboard', subtitle: 'Live inventory intelligence' },
+  '/dashboard': { title: 'Dashboard', subtitle: 'Inventory snapshot and movement overview' },
   '/inventory': { title: 'Inventory', subtitle: 'Search, sort, and export the live lot' },
   '/carfax': { title: 'CARFAX Lookup', subtitle: 'Jump from stock number to the report in one move' },
   '/trade-ins': { title: 'Trade-Ins', subtitle: 'Monitor inbound appraisals and aging units' },
@@ -49,7 +49,7 @@ function AppFrame() {
     )
   }
 
-  const routeMeta = ROUTE_META[location.pathname] ?? ROUTE_META['/dashboard']
+  const routeMeta = ROUTE_META[location.pathname] ?? ROUTE_META['/carfax']
   const dealerLabel = selectedDealer
     ? `${selectedDealer.name} · ${selectedDealer.city}`
     : `All ${dealers.length || 24} locations`
@@ -87,7 +87,7 @@ function AppFrame() {
               <div className="min-h-full border border-slate-800/70 bg-slate-950/55 shadow-[0_20px_80px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:rounded-[28px]">
                 <Suspense fallback={<RouteLoadingState />}>
                   <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/" element={<Navigate to="/carfax" replace />} />
                     <Route path="/find" element={<FindInventory />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inventory" element={<Inventory />} />
