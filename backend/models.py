@@ -124,6 +124,8 @@ class Vehicle(Base):
     transmission   = Column(String, nullable=True)
     image_url      = Column(String, nullable=True)
     listing_url    = Column(String, nullable=True)
+    carfax_url     = Column(String, nullable=True)
+    carfax_fetched_at = Column(DateTime, nullable=True)
 
     # ── Status and lifecycle ──────────────────────────────────────────────────
     is_active      = Column(Boolean, default=True)

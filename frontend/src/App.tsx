@@ -7,6 +7,7 @@ import { ScrapeProvider } from './context/ScrapeContext'
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Inventory = lazy(() => import('./pages/Inventory'))
+const Carfax = lazy(() => import('./pages/Carfax'))
 const Activity = lazy(() => import('./pages/Activity'))
 const Watchlist = lazy(() => import('./pages/Watchlist'))
 const Leads = lazy(() => import('./pages/Leads'))
@@ -26,6 +27,7 @@ export default function App() {
 const ROUTE_META: Record<string, { title: string; subtitle: string }> = {
   '/dashboard': { title: 'Dashboard', subtitle: 'Live inventory intelligence' },
   '/inventory': { title: 'Inventory', subtitle: 'Search, sort, and export the live lot' },
+  '/carfax': { title: 'CARFAX Lookup', subtitle: 'Jump from stock number to the report in one move' },
   '/trade-ins': { title: 'Trade-Ins', subtitle: 'Monitor inbound appraisals and aging units' },
   '/activity': { title: 'Activity Log', subtitle: 'Track every inventory movement in one feed' },
   '/watchlist': { title: 'Watchlist', subtitle: 'Saved vehicle criteria and alert coverage' },
@@ -89,6 +91,7 @@ function AppFrame() {
                     <Route path="/find" element={<FindInventory />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/inventory" element={<Inventory />} />
+                    <Route path="/carfax" element={<Carfax />} />
                     <Route path="/activity" element={<Activity />} />
                     <Route path="/watchlist" element={<Watchlist />} />
                     <Route path="/leads" element={<Leads />} />

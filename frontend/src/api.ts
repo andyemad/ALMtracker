@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type {
   Vehicle, VehicleEvent, WatchlistAlert, Lead, ScrapeLog,
-  Stats, Paginated, FilterOptions, Dealer, MyStats
+  Stats, Paginated, FilterOptions, Dealer, MyStats, CarfaxLookupResult
 } from './types'
 
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
@@ -44,6 +44,12 @@ export const getVehicles = (f: VehicleFilters = {}) =>
   api.get<Paginated<Vehicle>>('/vehicles', { params: f }).then(r => r.data)
 export const getFilterOptions = (dealerId?: number) =>
   api.get<FilterOptions>('/filter-options', { params: dealerId ? { dealer_id: dealerId } : {} }).then(r => r.data)
+export const lookupCarfax = (params: {
+  query?: string
+  vehicle_id?: number
+  dealer_id?: number
+  refresh?: boolean
+}) => api.get<CarfaxLookupResult>('/carfax', { params }).then(r => r.data)
 
 // Events
 export const getEvents = (params: {

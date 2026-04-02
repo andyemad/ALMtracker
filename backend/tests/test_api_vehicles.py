@@ -192,6 +192,7 @@ class TestListVehicles:
             "id", "vin", "stock_number", "year", "make", "model", "trim",
             "price", "mileage", "exterior_color", "interior_color", "body_style",
             "condition", "fuel_type", "transmission", "image_url", "listing_url",
+            "carfax_url", "carfax_fetched_at",
             "is_active", "first_seen", "last_seen", "days_on_lot"
         ]
         for field in required_fields:

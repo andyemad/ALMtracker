@@ -53,6 +53,8 @@ What this script does (in order):
 
     Step 10 Add campaign + consent tracking columns to leads if absent
 
+    Step 11 Add CARFAX cache columns to vehicles if absent
+
 Usage:
     Run once before starting the v2.0 backend:
         cd /Users/emadsiddiqui/ALM/backend
@@ -528,6 +530,34 @@ def _step10_add_attribution_and_consent_to_leads(conn) -> None:
     )
 
 
+def _step11_add_carfax_cache_to_vehicles(conn) -> None:
+    """
+    Add cached CARFAX lookup fields to `vehicles` if absent.
+    These let the app return a previously resolved CARFAX instantly instead of
+    re-fetching the public ALM listing every time.
+    """
+    additions = [
+        ("carfax_url", "TEXT"),
+        ("carfax_fetched_at", "DATETIME"),
+    ]
+
+    created = []
+    skipped = []
+    for column_name, column_type in additions:
+        if _column_exists(conn, "vehicles", column_name):
+            skipped.append(column_name)
+            continue
+
+        logger.info(f"Step 11: Adding vehicles.{column_name}")
+        conn.execute(text(f"ALTER TABLE vehicles ADD COLUMN {column_name} {column_type}"))
+        created.append(column_name)
+
+    logger.info(
+        f"Step 11 complete: {len(created)} vehicle column(s) added, "
+        f"{len(skipped)} already existed"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
@@ -566,6 +596,7 @@ def run_migrations(engine: Engine) -> None:
         _step8_create_supporting_indexes(conn)
         _step9_add_sold_at_to_leads(conn)
         _step10_add_attribution_and_consent_to_leads(conn)
+        _step11_add_carfax_cache_to_vehicles(conn)
 
         conn.commit()
 
@@ -598,6 +629,8 @@ def _verify_migration(engine: Engine) -> dict:
         # Column additions — vehicles
         checks["vehicles.dealer_id"]           = _column_exists(conn, "vehicles",        "dealer_id")
         checks["vehicles.location_name"]       = _column_exists(conn, "vehicles",        "location_name")
+        checks["vehicles.carfax_url"]          = _column_exists(conn, "vehicles",        "carfax_url")
+        checks["vehicles.carfax_fetched_at"]   = _column_exists(conn, "vehicles",        "carfax_fetched_at")
 
         # Column additions — vehicle_events
         checks["vehicle_events.dealer_id"]     = _column_exists(conn, "vehicle_events",  "dealer_id")

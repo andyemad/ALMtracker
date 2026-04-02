@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session, aliased
 
 import models
 from alerts import check_and_notify_watchlist, get_matching_vehicles
+from carfax import resolve_vehicle_carfax
 from database import Base, SessionLocal, engine, get_db
 from migrations import run_migrations
 from scraper import DealerConfig, scrape_all_dealers
@@ -368,6 +369,8 @@ def _vehicle_dict(v: models.Vehicle) -> dict:
         "transmission": v.transmission,
         "image_url": v.image_url,
         "listing_url": v.listing_url,
+        "carfax_url": v.carfax_url,
+        "carfax_fetched_at": v.carfax_fetched_at.isoformat() if v.carfax_fetched_at else None,
         "is_active": v.is_active,
         "first_seen": v.first_seen.isoformat() if v.first_seen else None,
         "last_seen": v.last_seen.isoformat() if v.last_seen else None,
@@ -434,6 +437,31 @@ def _exclude_currently_active_removals(q, db: Session):
             models.VehicleEvent.event_type != "removed",
             not_(or_(active_by_vin, active_by_stock)),
         )
+    )
+
+
+def _find_carfax_matches(
+    db: Session,
+    query: str,
+    dealer_id: Optional[int] = None,
+) -> list[models.Vehicle]:
+    normalized = query.strip().upper()
+    if not normalized:
+        return []
+
+    q = db.query(models.Vehicle).filter(models.Vehicle.is_active == True)
+    if dealer_id is not None:
+        q = q.filter(models.Vehicle.dealer_id == dealer_id)
+
+    return (
+        q.filter(
+            or_(
+                func.upper(models.Vehicle.stock_number) == normalized,
+                func.upper(models.Vehicle.vin) == normalized,
+            )
+        )
+        .order_by(desc(models.Vehicle.last_seen), desc(models.Vehicle.id))
+        .all()
     )
 
 
@@ -897,6 +925,71 @@ def list_vehicles(
         "page_size": page_size,
         "pages": max(1, (total + page_size - 1) // page_size),
         "data": [_vehicle_dict(v) for v in items],
+    }
+
+
+@app.get("/api/carfax")
+def lookup_carfax(
+    db: Session = Depends(get_db),
+    query: Optional[str] = None,
+    vehicle_id: Optional[int] = None,
+    dealer_id: Optional[int] = None,
+    refresh: bool = False,
+):
+    if vehicle_id is None and not (query or "").strip():
+        raise HTTPException(400, "Provide a stock number, VIN, or vehicle_id")
+
+    vehicle: Optional[models.Vehicle] = None
+    normalized_query = (query or "").strip()
+
+    if vehicle_id is not None:
+        q = db.query(models.Vehicle).filter(
+            models.Vehicle.id == vehicle_id,
+            models.Vehicle.is_active == True,
+        )
+        if dealer_id is not None:
+            q = q.filter(models.Vehicle.dealer_id == dealer_id)
+        vehicle = q.first()
+        if vehicle is None:
+            raise HTTPException(404, "Vehicle not found")
+    else:
+        matches = _find_carfax_matches(db, normalized_query, dealer_id)
+        if not matches:
+            raise HTTPException(404, "No active vehicle found for that stock number or VIN")
+        if len(matches) > 1:
+            return {
+                "status": "ambiguous",
+                "query": normalized_query,
+                "matches": [_vehicle_dict(v) for v in matches],
+            }
+        vehicle = matches[0]
+
+    if vehicle.carfax_url and not refresh:
+        return {
+            "status": "resolved",
+            "query": normalized_query or vehicle.stock_number,
+            "cached": True,
+            "carfax_url": vehicle.carfax_url,
+            "listing_url": vehicle.listing_url,
+            "vehicle": _vehicle_dict(vehicle),
+        }
+
+    try:
+        resolution = resolve_vehicle_carfax(db, vehicle, force_refresh=refresh)
+    except LookupError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except Exception as exc:
+        logger.error("CARFAX lookup failed for vehicle_id=%s: %s", vehicle.id, exc, exc_info=True)
+        raise HTTPException(502, "Could not retrieve the CARFAX link from ALM right now") from exc
+
+    db.refresh(vehicle)
+    return {
+        "status": "resolved",
+        "query": normalized_query or vehicle.stock_number,
+        "cached": False,
+        "carfax_url": resolution.carfax_url,
+        "listing_url": resolution.listing_url,
+        "vehicle": _vehicle_dict(vehicle),
     }
 
 

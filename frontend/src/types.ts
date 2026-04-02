@@ -18,6 +18,8 @@ export interface Vehicle {
   transmission: string
   image_url: string
   listing_url: string
+  carfax_url: string | null
+  carfax_fetched_at: string | null
   is_active: boolean
   first_seen: string
   last_seen: string
@@ -152,4 +154,14 @@ export interface Dealer {
   active_vehicle_count: number
   created_at: string
   last_scraped: string | null
+}
+
+export interface CarfaxLookupResult {
+  status: 'resolved' | 'ambiguous'
+  query: string
+  cached?: boolean
+  carfax_url?: string
+  listing_url?: string | null
+  vehicle?: Vehicle
+  matches?: Vehicle[]
 }
