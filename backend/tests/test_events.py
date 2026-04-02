@@ -33,10 +33,10 @@ import models
 def _event(db, stock_number="EVT001", event_type="added",
            description="Test event", old_value=None, new_value=None,
            make="Toyota", model="Camry", year=2022, price=25000.0,
-           timestamp=None, dealer_id=None, location_name=None):
+           timestamp=None, dealer_id=None, location_name=None, vin=""):
     e = models.VehicleEvent(
         stock_number=stock_number,
-        vin="",
+        vin=vin,
         event_type=event_type,
         description=description,
         old_value=old_value,

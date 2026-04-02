@@ -10,8 +10,8 @@ import { useDealer } from '../context/DealerContext'
 import { useScrape } from '../context/ScrapeContext'
 
 const links = [
-  { to: '/carfax',     icon: FileText,        label: 'CARFAX'       },
   { to: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard'    },
+  { to: '/carfax',     icon: FileText,        label: 'CARFAX'       },
   { to: '/inventory',  icon: Car,             label: 'Inventory'    },
   { to: '/trade-ins',  icon: ArrowRightLeft,  label: 'Trade-Ins'    },
   { to: '/activity',   icon: Activity,        label: 'Activity Log' },
@@ -75,8 +75,8 @@ export default function Sidebar({ mobile = false, open = false, onClose }: Sideb
               </div>
             </div>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300/70">ALM CARFAX</div>
-              <div className="text-sm font-semibold text-white leading-none">Quick Pull</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300/70">ALM Tracker</div>
+              <div className="text-sm font-semibold text-white leading-none">Inventory Intelligence</div>
             </div>
           </div>
           {mobile && (
@@ -166,7 +166,7 @@ export default function Sidebar({ mobile = false, open = false, onClose }: Sideb
           <RefreshCw className={`w-3.5 h-3.5 ${scraping ? 'animate-spin' : ''}`} />
           {scraping ? 'Scraping...' : 'Refresh Now'}
         </button>
-        <p className="text-center text-[11px] text-slate-600 mt-2">Refresh the snapshot before working inventory-heavy screens.</p>
+        <p className="text-center text-[11px] text-slate-600 mt-2">Auto-refreshes every 6h</p>
       </div>
     </div>
   )

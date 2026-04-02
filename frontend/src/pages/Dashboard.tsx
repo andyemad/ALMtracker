@@ -105,7 +105,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="text-slate-400 text-sm mt-0.5">
-          {selectedDealer ? `${selectedDealer.name} · ${selectedDealer.city}` : 'All 24 ALM Locations'} — inventory snapshot and recent movement
+          {selectedDealer ? `${selectedDealer.name} · ${selectedDealer.city}` : 'All 24 ALM Locations'} — live inventory intel
         </p>
         </div>
         <ScrapeStatus stats={stats} scraping={scraping} />
