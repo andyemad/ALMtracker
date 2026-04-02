@@ -55,6 +55,7 @@ app.add_middleware(
 )
 
 scheduler = AsyncIOScheduler()
+RUNNING_ON_VERCEL = bool(os.getenv("VERCEL"))
 
 
 @app.get("/health")
@@ -311,6 +312,10 @@ def run_scrape(db: Session):
 
 @app.on_event("startup")
 async def startup():
+    if RUNNING_ON_VERCEL:
+        logger.info("Vercel runtime detected — skipping APScheduler startup")
+        return
+
     try:
         db = SessionLocal()
         count = db.query(models.Vehicle).count()
@@ -343,7 +348,8 @@ async def startup():
 
 @app.on_event("shutdown")
 async def shutdown():
-    scheduler.shutdown()
+    if scheduler.running:
+        scheduler.shutdown()
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
