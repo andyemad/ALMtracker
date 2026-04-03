@@ -330,15 +330,32 @@ async def startup():
         logger.warning(f"Could not query vehicles table (first run?): {e}")
         count = 0
 
-    if count == 0:
-        logger.info("Empty DB — scheduling initial scrape in background...")
+    needs_scrape = count == 0
+    if not needs_scrape:
+        try:
+            db = SessionLocal()
+            last_log = (
+                db.query(models.ScrapeLog)
+                .filter(models.ScrapeLog.dealer_id.is_(None), models.ScrapeLog.status == "success")
+                .order_by(desc(models.ScrapeLog.timestamp))
+                .first()
+            )
+            db.close()
+            if last_log is None or (datetime.utcnow() - last_log.timestamp).total_seconds() > 6 * 3600:
+                needs_scrape = True
+                logger.info("Stale data detected on startup — triggering scrape")
+        except Exception as e:
+            logger.warning(f"Could not check last scrape time: {e}")
+
+    if needs_scrape:
+        logger.info("Scheduling startup scrape in background...")
 
         async def _safe_initial_scrape():
             try:
                 await asyncio.to_thread(run_scrape, SessionLocal())
-                logger.info("Initial background scrape completed successfully")
+                logger.info("Startup background scrape completed successfully")
             except Exception as e:
-                logger.error(f"Initial background scrape failed (non-fatal): {e}")
+                logger.error(f"Startup background scrape failed (non-fatal): {e}")
 
         asyncio.create_task(_safe_initial_scrape())
 

@@ -284,7 +284,7 @@ function ScrapeStatus({ stats, scraping }: { stats: Stats | null; scraping: bool
           <span>{label} {formatDistanceToNow(lastScrape, { addSuffix: true })}</span>
         </div>
         <p className="mt-1 text-[11px] text-slate-300">
-          {format(lastScrape, "MMM d, yyyy 'at' h:mm a 'UTC'")}
+          {format(lastScrape, "MMM d, yyyy 'at' h:mm a")}
         </p>
       </div>
     </div>
