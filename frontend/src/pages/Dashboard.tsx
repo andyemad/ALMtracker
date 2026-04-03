@@ -257,14 +257,26 @@ function ScrapeStatus({ stats, scraping }: { stats: Stats | null; scraping: bool
   const Icon = !ok ? XCircle : stale ? AlertCircle : CheckCircle
   const label = !ok ? 'Last sync failed' : stale ? 'Snapshot last synced' : 'Last sync'
   return (
-    <div className={`rounded-xl border px-3 py-2 ${tone}`}>
-      <div className="flex items-center gap-2 text-xs">
-        <Icon className="h-3 w-3" />
-        <span>{label} {formatDistanceToNow(lastScrape, { addSuffix: true })}</span>
+    <div className="flex items-center gap-2">
+      <a
+        href="https://almtracker.vercel.app"
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2 text-xs text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
+        title="Open ALM Tracker"
+      >
+        <ExternalLink className="h-3 w-3" />
+        almtracker.vercel.app
+      </a>
+      <div className={`rounded-xl border px-3 py-2 ${tone}`}>
+        <div className="flex items-center gap-2 text-xs">
+          <Icon className="h-3 w-3" />
+          <span>{label} {formatDistanceToNow(lastScrape, { addSuffix: true })}</span>
+        </div>
+        <p className="mt-1 text-[11px] text-slate-300">
+          {format(lastScrape, "MMM d, yyyy 'at' h:mm a 'UTC'")}
+        </p>
       </div>
-      <p className="mt-1 text-[11px] text-slate-300">
-        {format(lastScrape, "MMM d, yyyy 'at' h:mm a 'UTC'")}
-      </p>
     </div>
   )
 }
