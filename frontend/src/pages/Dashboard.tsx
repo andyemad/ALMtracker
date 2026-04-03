@@ -258,16 +258,28 @@ function ScrapeStatus({ stats, scraping }: { stats: Stats | null; scraping: bool
   const label = !ok ? 'Last sync failed' : stale ? 'Snapshot last synced' : 'Last sync'
   return (
     <div className="flex items-center gap-2">
-      <a
-        href="https://almtracker.vercel.app"
-        target="_blank"
-        rel="noreferrer"
-        className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2 text-xs text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
-        title="Open ALM Tracker"
-      >
-        <ExternalLink className="h-3 w-3" />
-        almtracker.vercel.app
-      </a>
+      <div className="flex flex-col items-end gap-1">
+        <button
+          onClick={() => {
+            if ('chrome' in window || navigator.userAgent.includes('Firefox')) {
+              window.sidebar?.addPanel?.('ALM Tracker', 'https://almtracker.vercel.app', '')
+            }
+            window.alert('To bookmark: press Ctrl+D (Windows) or Cmd+D (Mac)')
+          }}
+          className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+        >
+          Bookmark this link
+        </button>
+        <a
+          href="https://almtracker.vercel.app"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2 text-xs text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
+        >
+          <ExternalLink className="h-3 w-3" />
+          almtracker.vercel.app
+        </a>
+      </div>
       <div className={`rounded-xl border px-3 py-2 ${tone}`}>
         <div className="flex items-center gap-2 text-xs">
           <Icon className="h-3 w-3" />
