@@ -895,7 +895,11 @@ def get_stats(
 
     scraping_now = (
         db.query(models.ScrapeLog)
-        .filter(models.ScrapeLog.dealer_id.is_(None), models.ScrapeLog.status == "running")
+        .filter(
+            models.ScrapeLog.dealer_id.is_(None),
+            models.ScrapeLog.status == "running",
+            models.ScrapeLog.timestamp >= datetime.utcnow() - timedelta(minutes=10),
+        )
         .first()
     ) is not None
 
