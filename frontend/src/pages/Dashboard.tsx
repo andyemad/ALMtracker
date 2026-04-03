@@ -261,9 +261,6 @@ function ScrapeStatus({ stats, scraping }: { stats: Stats | null; scraping: bool
       <div className="flex flex-col items-end gap-1">
         <button
           onClick={() => {
-            if ('chrome' in window || navigator.userAgent.includes('Firefox')) {
-              window.sidebar?.addPanel?.('ALM Tracker', 'https://almtracker.vercel.app', '')
-            }
             window.alert('To bookmark: press Ctrl+D (Windows) or Cmd+D (Mac)')
           }}
           className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
