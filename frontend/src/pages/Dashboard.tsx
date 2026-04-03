@@ -236,7 +236,8 @@ export default function Dashboard() {
 }
 
 function ScrapeStatus({ stats, scraping }: { stats: Stats | null; scraping: boolean }) {
-  if (scraping) {
+  const isScraping = scraping || stats?.scraping_now
+  if (isScraping) {
     return (
       <div className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border
                       bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse">

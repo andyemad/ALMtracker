@@ -104,6 +104,7 @@ export interface Stats {
   removed_today: number
   active_alerts: number
   avg_price: number
+  scraping_now: boolean
   last_scrape: string | null
   last_scrape_status: string | null
   trend: Array<{

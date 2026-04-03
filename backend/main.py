@@ -767,6 +767,7 @@ def get_dealer_stats(dealer_id: int, db: Session = Depends(get_db)):
     last_log = (
         db.query(models.ScrapeLog)
         .filter(models.ScrapeLog.dealer_id == dealer_id)
+        .filter(models.ScrapeLog.status != "running")
         .order_by(desc(models.ScrapeLog.timestamp))
         .first()
     )
@@ -875,6 +876,7 @@ def get_stats(
     last_log = (
         db.query(models.ScrapeLog)
         .filter(models.ScrapeLog.dealer_id.is_(None))
+        .filter(models.ScrapeLog.status != "running")
         .order_by(desc(models.ScrapeLog.timestamp))
         .first()
     )
@@ -891,12 +893,19 @@ def get_stats(
         .all()
     )
 
+    scraping_now = (
+        db.query(models.ScrapeLog)
+        .filter(models.ScrapeLog.dealer_id.is_(None), models.ScrapeLog.status == "running")
+        .first()
+    ) is not None
+
     result = {
         "total_active": total_active,
         "added_today": added_today,
         "removed_today": removed_today,
         "active_alerts": active_alerts,
         "avg_price": round(float(avg_price or 0), 2),
+        "scraping_now": scraping_now,
         "last_scrape": last_log.timestamp.isoformat() if last_log else None,
         "last_scrape_status": last_log.status if last_log else None,
         "trend": [
