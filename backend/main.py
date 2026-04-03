@@ -478,20 +478,23 @@ def _find_carfax_matches(
     if not normalized:
         return []
 
-    q = db.query(models.Vehicle).filter(models.Vehicle.is_active == True)
+    q = db.query(models.Vehicle)
     if dealer_id is not None:
         q = q.filter(models.Vehicle.dealer_id == dealer_id)
 
-    return (
-        q.filter(
-            or_(
-                func.upper(models.Vehicle.stock_number) == normalized,
-                func.upper(models.Vehicle.vin) == normalized,
-            )
+    q = q.filter(
+        or_(
+            func.upper(models.Vehicle.stock_number) == normalized,
+            func.upper(models.Vehicle.vin) == normalized,
         )
-        .order_by(desc(models.Vehicle.last_seen), desc(models.Vehicle.id))
-        .all()
     )
+
+    # Prefer active vehicles, but fall back to inactive (e.g. recently sold)
+    # so CARFAX links cached before the car sold are still retrievable.
+    results = q.filter(models.Vehicle.is_active == True).order_by(desc(models.Vehicle.last_seen), desc(models.Vehicle.id)).all()
+    if not results:
+        results = q.order_by(desc(models.Vehicle.last_seen), desc(models.Vehicle.id)).all()
+    return results
 
 
 def _upsert_live_vehicle_match(db: Session, vdata: dict) -> models.Vehicle:
@@ -1124,10 +1127,7 @@ def lookup_carfax(
     normalized_query = (query or "").strip()
 
     if vehicle_id is not None:
-        q = db.query(models.Vehicle).filter(
-            models.Vehicle.id == vehicle_id,
-            models.Vehicle.is_active == True,
-        )
+        q = db.query(models.Vehicle).filter(models.Vehicle.id == vehicle_id)
         if dealer_id is not None:
             q = q.filter(models.Vehicle.dealer_id == dealer_id)
         vehicle = q.first()
