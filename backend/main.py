@@ -36,6 +36,31 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 logger = logging.getLogger(__name__)
 
 import os
+import shutil
+
+# ---------------------------------------------------------------------------
+# Volume bootstrap: if DATABASE_URL points to a volume path and that file
+# doesn't exist yet, seed it from the bundled alm.db baked into the image.
+# This preserves weeks of historical event data on first volume mount instead
+# of starting a blank DB.
+# ---------------------------------------------------------------------------
+_db_url = os.getenv("DATABASE_URL", "")
+if _db_url.startswith("sqlite:////"):
+    # Absolute path — strip the sqlite://// prefix to get the filesystem path
+    _volume_db_path = _db_url[len("sqlite:////") - 1:]   # keep leading /
+    _bundled_db_path = os.path.join(os.path.dirname(__file__), "alm.db")
+
+    if not os.path.exists(_volume_db_path) and os.path.exists(_bundled_db_path):
+        os.makedirs(os.path.dirname(_volume_db_path), exist_ok=True)
+        shutil.copy2(_bundled_db_path, _volume_db_path)
+        logger.info(
+            f"Volume bootstrap: copied bundled DB → {_volume_db_path} "
+            f"({os.path.getsize(_volume_db_path):,} bytes)"
+        )
+    elif os.path.exists(_volume_db_path):
+        logger.info(f"Volume DB already exists at {_volume_db_path} — skipping bootstrap")
+    else:
+        logger.warning(f"No bundled DB found at {_bundled_db_path} — starting fresh")
 
 # Create tables first, then run migrations to seed data and add indexes
 try:
