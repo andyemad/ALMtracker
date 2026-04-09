@@ -50,11 +50,21 @@ if _db_url.startswith("sqlite:////"):
     _volume_db_path = _db_url[len("sqlite:////") - 1:]   # keep leading /
     _bundled_db_path = os.path.join(os.path.dirname(__file__), "alm.db")
 
-    if not os.path.exists(_volume_db_path) and os.path.exists(_bundled_db_path):
+    _force = os.getenv("FORCE_BOOTSTRAP", "").lower() in ("1", "true", "yes")
+    _volume_missing = not os.path.exists(_volume_db_path)
+
+    if (_volume_missing or _force) and os.path.exists(_bundled_db_path):
         os.makedirs(os.path.dirname(_volume_db_path), exist_ok=True)
-        shutil.copy2(_bundled_db_path, _volume_db_path)
+        import sqlite3 as _sqlite3
+        # Use SQLite's online backup API — safe even if a stale lock exists
+        _src = _sqlite3.connect(_bundled_db_path)
+        _dst = _sqlite3.connect(_volume_db_path)
+        _src.backup(_dst)
+        _dst.close()
+        _src.close()
+        action = "force-restored" if _force else "bootstrapped"
         logger.info(
-            f"Volume bootstrap: copied bundled DB → {_volume_db_path} "
+            f"Volume {action}: copied bundled DB → {_volume_db_path} "
             f"({os.path.getsize(_volume_db_path):,} bytes)"
         )
     elif os.path.exists(_volume_db_path):
