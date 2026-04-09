@@ -122,6 +122,28 @@ def run_scrape(db: Session):
         logger.info(f"Starting scrape for {len(configs)} active dealer(s)")
         dealer_map, total_raw, method = scrape_all_dealers(configs)
 
+        # Safety guard: if total vehicles found is suspiciously low it means the
+        # pagination was cut short (transient HTTP error mid-run).  Writing those
+        # partial results would mark thousands of live vehicles as "removed".
+        # Abort early instead — the next scheduled run will retry the full pass.
+        MIN_EXPECTED_VEHICLES = 5000
+        if total_raw > 0 and total_raw < MIN_EXPECTED_VEHICLES:
+            duration = (datetime.utcnow() - start).total_seconds()
+            log.status = "partial"
+            log.error = (
+                f"Partial scrape: only {total_raw} vehicles found "
+                f"(threshold {MIN_EXPECTED_VEHICLES}). No DB changes written."
+            )
+            log.vehicles_found = total_raw
+            log.method = method
+            log.duration_seconds = duration
+            db.commit()
+            logger.warning(
+                f"Partial scrape aborted: {total_raw} vehicles < threshold {MIN_EXPECTED_VEHICLES}. "
+                "Skipping DB write to prevent false removals."
+            )
+            return log
+
         total_added = total_removed = total_price_changes = 0
         dealer_details = []
 

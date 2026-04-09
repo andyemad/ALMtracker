@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
@@ -268,30 +269,49 @@ def normalize_vehicle(v: Dict) -> Dict:
 # HTTP / page fetching
 # ---------------------------------------------------------------------------
 
-def _fetch_page(offset: int = 0) -> Optional[Dict]:
+def _fetch_page(offset: int = 0, max_retries: int = 3) -> Optional[Dict]:
     """
     Fetch one paginated inventory page from the Overfuel SSR endpoint and
     return the parsed __NEXT_DATA__ JSON dict.
 
-    Never raises — returns None on any HTTP error, timeout, or parse failure.
+    Never raises — returns None only after all retry attempts are exhausted.
     The caller (pagination loop) treats None as a signal to stop.
+    Retries up to max_retries times with exponential back-off (5s, 10s).
     """
     url = f"{BASE_URL}/inventory?limit={PAGE_SIZE}&offset={offset}"
-    try:
-        with httpx.Client(follow_redirects=True, timeout=45) as client:
-            r = client.get(url, headers=HEADERS)
-            r.raise_for_status()
-            soup = BeautifulSoup(r.text, "html.parser")
-            script = soup.find("script", {"id": "__NEXT_DATA__"})
-            if script and script.string:
-                return json.loads(script.string)
-            logger.warning(f"No __NEXT_DATA__ script found at offset={offset}")
-    except httpx.HTTPStatusError as e:
-        logger.error(f"HTTP {e.response.status_code} fetching offset={offset}: {e}")
-    except httpx.TimeoutException:
-        logger.error(f"Timeout fetching offset={offset} (limit={PAGE_SIZE})")
-    except Exception as e:
-        logger.error(f"Unexpected error fetching offset={offset}: {e}")
+    for attempt in range(1, max_retries + 1):
+        try:
+            with httpx.Client(follow_redirects=True, timeout=45) as client:
+                r = client.get(url, headers=HEADERS)
+                r.raise_for_status()
+                soup = BeautifulSoup(r.text, "html.parser")
+                script = soup.find("script", {"id": "__NEXT_DATA__"})
+                if script and script.string:
+                    return json.loads(script.string)
+                logger.warning(
+                    f"No __NEXT_DATA__ at offset={offset} (attempt {attempt}/{max_retries})"
+                )
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                f"HTTP {e.response.status_code} fetching offset={offset} "
+                f"(attempt {attempt}/{max_retries}): {e}"
+            )
+        except httpx.TimeoutException:
+            logger.warning(
+                f"Timeout fetching offset={offset} (attempt {attempt}/{max_retries})"
+            )
+        except Exception as e:
+            logger.error(
+                f"Unexpected error fetching offset={offset} "
+                f"(attempt {attempt}/{max_retries}): {e}"
+            )
+
+        if attempt < max_retries:
+            sleep_sec = 5 * attempt
+            logger.info(f"Retrying offset={offset} in {sleep_sec}s...")
+            time.sleep(sleep_sec)
+
+    logger.error(f"Failed to fetch offset={offset} after {max_retries} attempts")
     return None
 
 
