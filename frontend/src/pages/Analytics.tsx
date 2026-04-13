@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend,
@@ -250,7 +250,7 @@ export default function Analytics() {
           </div>
 
           {/* Model drilldown — expands below the chart when a make is clicked */}
-          {selectedMake && make_model_breakdown[selectedMake] && (
+          {selectedMake && make_model_breakdown?.[selectedMake]?.length > 0 && (
             <div className="mt-4 border-t border-slate-800 pt-4">
               <p className="text-xs font-bold text-white mb-3">
                 {selectedMake} — top models sold
@@ -443,14 +443,13 @@ export default function Analytics() {
             </thead>
             <tbody>
               {top_models.map((m, i) => {
-                const key = `${m.make}|${m.model}`
-                const isOpen = selectedModel === key
-                const years = model_year_breakdown[key]
+                const modelKey = `${m.make}|${m.model}`
+                const isOpen = selectedModel === modelKey
+                const years = model_year_breakdown?.[modelKey]
                 return (
-                  <>
+                  <React.Fragment key={modelKey}>
                     <tr
-                      key={key}
-                      onClick={() => setSelectedModel(prev => prev === key ? null : key)}
+                      onClick={() => setSelectedModel(prev => prev === modelKey ? null : modelKey)}
                       className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer"
                     >
                       <td className="py-2.5 text-slate-600 font-mono">{i + 1}</td>
@@ -465,12 +464,12 @@ export default function Analytics() {
                         <span className={`inline-block transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
                       </td>
                     </tr>
-                    {isOpen && years && (
-                      <tr key={`${key}-years`} className="border-b border-slate-800/50 bg-slate-800/20">
+                    {isOpen && years && years.length > 0 && (
+                      <tr className="border-b border-slate-800/50 bg-slate-800/20">
                         <td />
                         <td colSpan={4} className="py-2.5 pr-2">
                           <div className="flex flex-wrap gap-2">
-                            {years.map(y => (
+                            {years.map((y: { year: number; count: number }) => (
                               <div key={y.year} className="flex items-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 px-2.5 py-1 text-xs">
                                 <span className="font-bold text-white">{y.year}</span>
                                 <span className="text-slate-400">{y.count} sold</span>
@@ -480,7 +479,7 @@ export default function Analytics() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 )
               })}
             </tbody>
