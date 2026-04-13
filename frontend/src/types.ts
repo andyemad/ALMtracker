@@ -169,6 +169,7 @@ export interface AnalyticsData {
   top_makes: Array<{ make: string; count: number; pct: number }>
   top_models: Array<{ make: string; model: string; count: number; avg_price: number }>
   top_years: Array<{ year: number; count: number; pct: number }>
+  make_year_breakdown: Record<string, Array<{ year: number; count: number }>>
   top_colors: Array<{ color: string; count: number; pct: number }>
   body_styles: Array<{ body_style: string; count: number; pct: number }>
   condition_split: { new: number; preowned: number; new_pct: number; preowned_pct: number }

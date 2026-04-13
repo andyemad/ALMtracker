@@ -1760,6 +1760,20 @@ def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)
         for w, c in sorted(week_counts.items(), key=lambda x: x[0])
     ]
 
+    # ── Make × year breakdown (drilldown for top-makes bar chart) ────────────
+    make_year_raw: dict[str, dict[int, int]] = {}
+    for v in sold:
+        if v.make and v.year:
+            make_year_raw.setdefault(v.make, {})
+            make_year_raw[v.make][v.year] = make_year_raw[v.make].get(v.year, 0) + 1
+    make_year_breakdown = {
+        m["make"]: sorted(
+            [{"year": yr, "count": cnt} for yr, cnt in make_year_raw.get(m["make"], {}).items()],
+            key=lambda x: -x["year"],
+        )
+        for m in top_makes
+    }
+
     # ── Top model years ──────────────────────────────────────────────────────
     year_counts: dict[int, int] = {}
     for v in sold:
@@ -1884,6 +1898,7 @@ def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)
         "top_makes":               top_makes,
         "top_models":              top_models,
         "top_years":               top_years,
+        "make_year_breakdown":     make_year_breakdown,
         "top_colors":              top_colors,
         "body_styles":             body_styles,
         "condition_split":         condition_split,

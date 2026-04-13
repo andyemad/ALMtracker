@@ -101,6 +101,7 @@ export default function Analytics() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [urgencyFilter, setUrgencyFilter] = useState<'all' | 'critical' | 'high' | 'medium'>('all')
+  const [selectedMake, setSelectedMake] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -135,7 +136,7 @@ export default function Analytics() {
 
   const { summary, top_makes, top_models, top_years, top_colors, body_styles, condition_split,
     price_buckets, velocity_by_make, weekly_trend, location_performance,
-    branded_location_split, cars_to_move } = data
+    branded_location_split, make_year_breakdown, cars_to_move } = data
 
   const filteredCarsToMove = urgencyFilter === 'all'
     ? cars_to_move
@@ -193,23 +194,73 @@ export default function Analytics() {
 
         {/* Top Makes horizontal bar */}
         <div className="lg:col-span-2 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
-          <h2 className="text-sm font-bold text-white mb-1">Best-Selling Makes</h2>
-          <p className="text-xs text-slate-500 mb-4">% of all sold vehicles</p>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h2 className="text-sm font-bold text-white">Best-Selling Makes</h2>
+            {selectedMake && (
+              <button
+                onClick={() => setSelectedMake(null)}
+                className="text-[10px] font-semibold text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
+              >
+                ✕ clear
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-slate-500 mb-4">
+            {selectedMake ? `Showing year breakdown for ${selectedMake} — click another bar or clear` : '% of all sold vehicles · click a bar to see year breakdown'}
+          </p>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={top_makes} layout="vertical" margin={{ left: 8, right: 24 }}>
+              <BarChart
+                data={top_makes}
+                layout="vertical"
+                margin={{ left: 8, right: 24 }}
+                onClick={(e) => {
+                  const make = e?.activePayload?.[0]?.payload?.make
+                  if (make) setSelectedMake(prev => prev === make ? null : make)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
                 <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
                 <YAxis type="category" dataKey="make" tick={{ fill: '#94a3b8', fontSize: 11 }} width={72} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'rgba(99,102,241,0.07)' }} />
                 <Bar dataKey="pct" name="% of Sales" radius={[0, 6, 6, 0]}>
-                  {top_makes.map((_, i) => (
-                    <Cell key={i} fill={BRAND_COLORS[i % BRAND_COLORS.length]} />
+                  {top_makes.map((m, i) => (
+                    <Cell
+                      key={i}
+                      fill={BRAND_COLORS[i % BRAND_COLORS.length]}
+                      opacity={selectedMake && selectedMake !== m.make ? 0.3 : 1}
+                    />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
+
+          {/* Year breakdown drilldown */}
+          {selectedMake && make_year_breakdown[selectedMake] && (
+            <div className="mt-4 border-t border-slate-800 pt-4">
+              <p className="text-xs font-bold text-white mb-3">
+                {selectedMake} — sold by model year
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {make_year_breakdown[selectedMake].map((y) => {
+                  const makeIdx = top_makes.findIndex(m => m.make === selectedMake)
+                  const color = BRAND_COLORS[makeIdx % BRAND_COLORS.length]
+                  return (
+                    <div
+                      key={y.year}
+                      className="flex items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-800/60 px-3 py-2 text-xs"
+                    >
+                      <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: color }} />
+                      <span className="font-bold text-white">{y.year}</span>
+                      <span className="text-slate-400">{y.count} sold</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Body Style donut */}
