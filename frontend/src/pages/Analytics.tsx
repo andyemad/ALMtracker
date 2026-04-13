@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend,
 } from 'recharts'
-import { TrendingUp, Car, DollarSign, Gauge, AlertTriangle, MapPin, ExternalLink } from 'lucide-react'
+import { TrendingUp, Car, DollarSign, Gauge, AlertTriangle, ExternalLink } from 'lucide-react'
 import { getAnalytics } from '../api'
 import { useDealer } from '../context/DealerContext'
 import type { AnalyticsData } from '../types'
@@ -143,8 +143,6 @@ export default function Analytics() {
 
   // For pie chart we want a nice donut
   const bodyPieData = body_styles.slice(0, 6)
-  const mogPerf = location_performance.find(l => l.dealer_id === MOG_DEALER_ID)
-
   return (
     <div className="p-4 sm:p-6 space-y-8">
 
@@ -189,31 +187,6 @@ export default function Analytics() {
           accent="from-amber-500/20 to-amber-600/5"
         />
       </div>
-
-      {/* Mall of Georgia spotlight (only in all-locations view) */}
-      {!selectedDealer && mogPerf && (
-        <div className="rounded-2xl border border-brand-500/40 bg-gradient-to-r from-brand-900/40 via-slate-900/40 to-slate-900/40 p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <MapPin className="w-4 h-4 text-brand-400" />
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-brand-400">Mall of Georgia · Spotlight</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <p className="text-xs text-slate-500">Vehicles Sold</p>
-              <p className="text-2xl font-bold text-white">{mogPerf.sold}</p>
-              <p className="text-xs text-brand-400">{mogPerf.pct}% of all ALM sales</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Avg Price</p>
-              <p className="text-2xl font-bold text-white">{fmtFull$(mogPerf.avg_price)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Best-Selling Make</p>
-              <p className="text-2xl font-bold text-white">{mogPerf.top_make}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Top Makes + Body Styles row */}
       <div className="grid gap-6 lg:grid-cols-3">
