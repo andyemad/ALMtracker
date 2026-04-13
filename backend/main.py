@@ -1761,18 +1761,35 @@ def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)
         for label, (date, count) in sorted(week_counts.items(), key=lambda x: x[1][0])
     ]
 
-    # ── Make × year breakdown (drilldown for top-makes bar chart) ────────────
-    make_year_raw: dict[str, dict[int, int]] = {}
+    # ── Make → model breakdown (click a make bar to see top models) ──────────
+    make_model_raw: dict[str, dict[str, int]] = {}
     for v in sold:
-        if v.make and v.year:
-            make_year_raw.setdefault(v.make, {})
-            make_year_raw[v.make][v.year] = make_year_raw[v.make].get(v.year, 0) + 1
-    make_year_breakdown = {
+        if v.make and v.model:
+            make_model_raw.setdefault(v.make, {})
+            make_model_raw[v.make][v.model] = make_model_raw[v.make].get(v.model, 0) + 1
+    make_model_breakdown = {
         m["make"]: sorted(
-            [{"year": yr, "count": cnt} for yr, cnt in make_year_raw.get(m["make"], {}).items()],
+            [{"model": mdl, "count": cnt} for mdl, cnt in make_model_raw.get(m["make"], {}).items()],
+            key=lambda x: -x["count"],
+        )[:10]
+        for m in top_makes
+    }
+
+    # ── Model → year breakdown (click a model row to see year split) ──────────
+    model_year_raw: dict[str, dict[int, int]] = {}
+    for v in sold:
+        if v.make and v.model and v.year:
+            key = f"{v.make}|{v.model}"
+            model_year_raw.setdefault(key, {})
+            model_year_raw[key][v.year] = model_year_raw[key].get(v.year, 0) + 1
+    top_model_keys = {f"{m['make']}|{m['model']}" for m in top_models}
+    model_year_breakdown = {
+        key: sorted(
+            [{"year": yr, "count": cnt} for yr, cnt in years.items()],
             key=lambda x: -x["year"],
         )
-        for m in top_makes
+        for key, years in model_year_raw.items()
+        if key in top_model_keys
     }
 
     # ── Top model years ──────────────────────────────────────────────────────
@@ -1899,7 +1916,8 @@ def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)
         "top_makes":               top_makes,
         "top_models":              top_models,
         "top_years":               top_years,
-        "make_year_breakdown":     make_year_breakdown,
+        "make_model_breakdown":    make_model_breakdown,
+        "model_year_breakdown":    model_year_breakdown,
         "top_colors":              top_colors,
         "body_styles":             body_styles,
         "condition_split":         condition_split,

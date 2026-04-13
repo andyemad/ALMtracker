@@ -102,6 +102,7 @@ export default function Analytics() {
   const [loading, setLoading] = useState(true)
   const [urgencyFilter, setUrgencyFilter] = useState<'all' | 'critical' | 'high' | 'medium'>('all')
   const [selectedMake, setSelectedMake] = useState<string | null>(null)
+  const [selectedModel, setSelectedModel] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -136,7 +137,7 @@ export default function Analytics() {
 
   const { summary, top_makes, top_models, top_years, top_colors, body_styles, condition_split,
     price_buckets, velocity_by_make, weekly_trend, location_performance,
-    branded_location_split, make_year_breakdown, cars_to_move } = data
+    branded_location_split, make_model_breakdown, model_year_breakdown, cars_to_move } = data
 
   const filteredCarsToMove = urgencyFilter === 'all'
     ? cars_to_move
@@ -248,24 +249,24 @@ export default function Analytics() {
             </ResponsiveContainer>
           </div>
 
-          {/* Year breakdown drilldown */}
-          {selectedMake && make_year_breakdown[selectedMake] && (
+          {/* Model drilldown — expands below the chart when a make is clicked */}
+          {selectedMake && make_model_breakdown[selectedMake] && (
             <div className="mt-4 border-t border-slate-800 pt-4">
               <p className="text-xs font-bold text-white mb-3">
-                {selectedMake} — sold by model year
+                {selectedMake} — top models sold
               </p>
               <div className="flex flex-wrap gap-2">
-                {make_year_breakdown[selectedMake].map((y) => {
-                  const makeIdx = top_makes.findIndex(m => m.make === selectedMake)
+                {make_model_breakdown[selectedMake].map((m) => {
+                  const makeIdx = top_makes.findIndex(mk => mk.make === selectedMake)
                   const color = BRAND_COLORS[makeIdx % BRAND_COLORS.length]
                   return (
                     <div
-                      key={y.year}
+                      key={m.model}
                       className="flex items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-800/60 px-3 py-2 text-xs"
                     >
                       <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                      <span className="font-bold text-white">{y.year}</span>
-                      <span className="text-slate-400">{y.count} sold</span>
+                      <span className="font-bold text-white">{m.model}</span>
+                      <span className="text-slate-400">{m.count} sold</span>
                     </div>
                   )
                 })}
@@ -428,7 +429,7 @@ export default function Analytics() {
       {/* Top Models table */}
       <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
         <h2 className="text-sm font-bold text-white mb-1">Top Selling Models</h2>
-        <p className="text-xs text-slate-500 mb-4">highest unit volume across all years</p>
+        <p className="text-xs text-slate-500 mb-4">click any row to see year breakdown</p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -437,21 +438,51 @@ export default function Analytics() {
                 <th className="pb-2 text-left font-semibold text-slate-500">Model</th>
                 <th className="pb-2 text-right font-semibold text-slate-500">Units</th>
                 <th className="pb-2 text-right font-semibold text-slate-500">Avg Price</th>
+                <th className="pb-2 w-6" />
               </tr>
             </thead>
             <tbody>
-              {top_models.map((m, i) => (
-                <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                  <td className="py-2.5 text-slate-600 font-mono">{i + 1}</td>
-                  <td className="py-2.5">
-                    <span className="font-semibold text-white">{m.make} {m.model}</span>
-                  </td>
-                  <td className="py-2.5 text-right">
-                    <span className="font-bold text-cyan-400">{m.count}</span>
-                  </td>
-                  <td className="py-2.5 text-right text-slate-300">{m.avg_price ? fmtFull$(m.avg_price) : '—'}</td>
-                </tr>
-              ))}
+              {top_models.map((m, i) => {
+                const key = `${m.make}|${m.model}`
+                const isOpen = selectedModel === key
+                const years = model_year_breakdown[key]
+                return (
+                  <>
+                    <tr
+                      key={key}
+                      onClick={() => setSelectedModel(prev => prev === key ? null : key)}
+                      className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                    >
+                      <td className="py-2.5 text-slate-600 font-mono">{i + 1}</td>
+                      <td className="py-2.5">
+                        <span className="font-semibold text-white">{m.make} {m.model}</span>
+                      </td>
+                      <td className="py-2.5 text-right">
+                        <span className="font-bold text-cyan-400">{m.count}</span>
+                      </td>
+                      <td className="py-2.5 text-right text-slate-300">{m.avg_price ? fmtFull$(m.avg_price) : '—'}</td>
+                      <td className="py-2.5 text-right text-slate-600">
+                        <span className={`inline-block transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
+                      </td>
+                    </tr>
+                    {isOpen && years && (
+                      <tr key={`${key}-years`} className="border-b border-slate-800/50 bg-slate-800/20">
+                        <td />
+                        <td colSpan={4} className="py-2.5 pr-2">
+                          <div className="flex flex-wrap gap-2">
+                            {years.map(y => (
+                              <div key={y.year} className="flex items-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 px-2.5 py-1 text-xs">
+                                <span className="font-bold text-white">{y.year}</span>
+                                <span className="text-slate-400">{y.count} sold</span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                )
+              })}
             </tbody>
           </table>
         </div>
