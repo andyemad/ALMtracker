@@ -214,7 +214,7 @@ export default function Analytics() {
             )}
           </div>
           <p className="text-xs text-slate-500 mb-4">
-            {selectedMake ? `Showing year breakdown for ${selectedMake} — click another bar or clear` : '% of all sold vehicles · click a bar to see year breakdown'}
+            {selectedMake ? `Showing models for ${selectedMake} — click another bar or clear` : '% of all sold vehicles · click a bar to see models'}
           </p>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -232,8 +232,8 @@ export default function Analytics() {
                   name="% of Sales"
                   radius={[0, 6, 6, 0]}
                   style={{ cursor: 'pointer' }}
-                  onClick={(data: any) => {
-                    const make = data?.make
+                  onClick={(entry: any) => {
+                    const make = entry?.payload?.make ?? entry?.make
                     if (make) setSelectedMake((prev: string | null) => prev === make ? null : make)
                   }}
                 >
