@@ -1662,18 +1662,18 @@ def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)
         for m, c in sorted(make_counts.items(), key=lambda x: -x[1])[:12]
     ]
 
-    # ── Top models (year + make + model) ─────────────────────────────────────
+    # ── Top models (make + model, year-agnostic) ──────────────────────────────
     model_counts: dict[tuple, int] = {}
     model_prices: dict[tuple, list] = {}
     for v in sold:
         if v.make and v.model:
-            key = (v.year or 0, v.make, v.model)
+            key = (v.make, v.model)
             model_counts[key] = model_counts.get(key, 0) + 1
             if v.price and v.price > 0:
                 model_prices.setdefault(key, []).append(v.price)
     top_models = [
         {
-            "year": k[0], "make": k[1], "model": k[2],
+            "make": k[0], "model": k[1],
             "count": c,
             "avg_price": round(sum(model_prices.get(k, [])) / len(model_prices[k]), 0)
                          if model_prices.get(k) else 0,

@@ -343,60 +343,30 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* Velocity + Colors row */}
-      <div className="grid gap-6 lg:grid-cols-2">
-
-        {/* Velocity by make */}
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
-          <h2 className="text-sm font-bold text-white mb-1">Sales Velocity by Make</h2>
-          <p className="text-xs text-slate-500 mb-4">avg days on lot (lower = faster turnaround)</p>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={velocity_by_make} layout="vertical" margin={{ left: 8, right: 32 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} unit="d" />
-                <YAxis type="category" dataKey="make" tick={{ fill: '#94a3b8', fontSize: 11 }} width={72} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'rgba(245,158,11,0.07)' }} />
-                <Bar dataKey="avg_days" name="Avg Days" radius={[0, 6, 6, 0]}>
-                  {velocity_by_make.map((v, i) => (
-                    <Cell key={i} fill={v.avg_days <= 10 ? '#10b981' : v.avg_days <= 20 ? '#f59e0b' : '#ef4444'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-400" />Fast (&le;10d)</span>
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-400" />Avg (11–20d)</span>
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-400" />Slow (&gt;20d)</span>
-          </div>
-        </div>
-
-        {/* Top colors */}
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
-          <h2 className="text-sm font-bold text-white mb-1">Top Exterior Colors</h2>
-          <p className="text-xs text-slate-500 mb-4">most popular colors among sold vehicles</p>
-          <div className="grid grid-cols-2 gap-2">
-            {top_colors.slice(0, 10).map((c) => (
-              <div key={c.color} className="flex items-center gap-2.5 rounded-xl border border-slate-700/50 bg-slate-800/40 px-3 py-2">
-                <span
-                  className="h-7 w-7 rounded-lg flex-shrink-0 border border-slate-700/60"
-                  style={{ background: guessColorHex(c.color) }}
-                />
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-slate-200 truncate">{c.color}</p>
-                  <p className="text-[10px] text-slate-500">{c.count} sold · {c.pct}%</p>
-                </div>
+      {/* Top colors */}
+      <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
+        <h2 className="text-sm font-bold text-white mb-1">Top Exterior Colors</h2>
+        <p className="text-xs text-slate-500 mb-4">most popular colors among sold vehicles</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          {top_colors.slice(0, 10).map((c) => (
+            <div key={c.color} className="flex items-center gap-2.5 rounded-xl border border-slate-700/50 bg-slate-800/40 px-3 py-2">
+              <span
+                className="h-7 w-7 rounded-lg flex-shrink-0 border border-slate-700/60"
+                style={{ background: guessColorHex(c.color) }}
+              />
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-slate-200 truncate">{c.color}</p>
+                <p className="text-[10px] text-slate-500">{c.count} sold · {c.pct}%</p>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Top Models table */}
       <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
         <h2 className="text-sm font-bold text-white mb-1">Top Selling Models</h2>
-        <p className="text-xs text-slate-500 mb-4">highest unit volume by year · make · model</p>
+        <p className="text-xs text-slate-500 mb-4">highest unit volume across all years</p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -412,7 +382,7 @@ export default function Analytics() {
                 <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
                   <td className="py-2.5 text-slate-600 font-mono">{i + 1}</td>
                   <td className="py-2.5">
-                    <span className="font-semibold text-white">{m.year} {m.make} {m.model}</span>
+                    <span className="font-semibold text-white">{m.make} {m.model}</span>
                   </td>
                   <td className="py-2.5 text-right">
                     <span className="font-bold text-cyan-400">{m.count}</span>

@@ -167,7 +167,7 @@ export interface AnalyticsData {
     date_to: string | null
   }
   top_makes: Array<{ make: string; count: number; pct: number }>
-  top_models: Array<{ year: number; make: string; model: string; count: number; avg_price: number }>
+  top_models: Array<{ make: string; model: string; count: number; avg_price: number }>
   top_years: Array<{ year: number; count: number; pct: number }>
   top_colors: Array<{ color: string; count: number; pct: number }>
   body_styles: Array<{ body_style: string; count: number; pct: number }>
