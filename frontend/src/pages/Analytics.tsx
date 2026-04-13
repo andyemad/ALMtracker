@@ -221,17 +221,21 @@ export default function Analytics() {
                 data={top_makes}
                 layout="vertical"
                 margin={{ left: 8, right: 24 }}
-                onClick={(e) => {
-                  const make = e?.activePayload?.[0]?.payload?.make
-                  if (make) setSelectedMake(prev => prev === make ? null : make)
-                }}
-                style={{ cursor: 'pointer' }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
                 <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
                 <YAxis type="category" dataKey="make" tick={{ fill: '#94a3b8', fontSize: 11 }} width={72} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'rgba(99,102,241,0.07)' }} />
-                <Bar dataKey="pct" name="% of Sales" radius={[0, 6, 6, 0]}>
+                <Bar
+                  dataKey="pct"
+                  name="% of Sales"
+                  radius={[0, 6, 6, 0]}
+                  style={{ cursor: 'pointer' }}
+                  onClick={(data: any) => {
+                    const make = data?.make
+                    if (make) setSelectedMake((prev: string | null) => prev === make ? null : make)
+                  }}
+                >
                   {top_makes.map((m, i) => (
                     <Cell
                       key={i}
