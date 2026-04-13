@@ -1748,16 +1748,17 @@ def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)
     )[:12]
 
     # ── Weekly trend (sold per week using last_seen date) ────────────────────
-    week_counts: dict[str, int] = {}
+    week_counts: dict[str, tuple] = {}  # label -> (date, count)
     for v in sold:
         if v.last_seen:
-            # ISO week label: "Apr 07"
             week_start = v.last_seen - timedelta(days=v.last_seen.weekday())
             label = week_start.strftime("%b %d")
-            week_counts[label] = week_counts.get(label, 0) + 1
+            if label not in week_counts:
+                week_counts[label] = (week_start, 0)
+            week_counts[label] = (week_start, week_counts[label][1] + 1)
     weekly_trend = [
-        {"week": w, "sold": c}
-        for w, c in sorted(week_counts.items(), key=lambda x: x[0])
+        {"week": label, "sold": count}
+        for label, (date, count) in sorted(week_counts.items(), key=lambda x: x[1][0])
     ]
 
     # ── Make × year breakdown (drilldown for top-makes bar chart) ────────────
