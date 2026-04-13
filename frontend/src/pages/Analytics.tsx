@@ -227,32 +227,38 @@ export default function Analytics() {
                 <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
                 <YAxis type="category" dataKey="make" tick={{ fill: '#94a3b8', fontSize: 11 }} width={72} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'rgba(99,102,241,0.07)' }} />
-                <Bar
-                  dataKey="pct"
-                  name="% of Sales"
-                  radius={[0, 6, 6, 0]}
-                  style={{ cursor: 'pointer' }}
-                  onClick={(entry: any) => {
-                    const make = entry?.payload?.make ?? entry?.make
-                    if (make) setSelectedMake((prev: string | null) => prev === make ? null : make)
-                  }}
-                >
+                <Bar dataKey="pct" name="% of Sales" radius={[0, 6, 6, 0]}>
                   {top_makes.map((m, i) => (
-                    <Cell
-                      key={i}
-                      fill={BRAND_COLORS[i % BRAND_COLORS.length]}
-                      opacity={selectedMake && selectedMake !== m.make ? 0.3 : 1}
-                    />
+                    <Cell key={i} fill={BRAND_COLORS[i % BRAND_COLORS.length]} opacity={selectedMake && selectedMake !== m.make ? 0.3 : 1} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Model drilldown — expands below the chart when a make is clicked */}
-          {selectedMake && make_model_breakdown?.[selectedMake]?.length > 0 && (
-            <div className="mt-4 border-t border-slate-800 pt-4">
-              <p className="text-xs font-bold text-white mb-3">
+          {/* Clickable make buttons */}
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {top_makes.map((m, i) => (
+              <button
+                key={m.make}
+                onClick={() => setSelectedMake(prev => prev === m.make ? null : m.make)}
+                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
+                  selectedMake === m.make
+                    ? 'border-brand-500/50 bg-brand-500/20 text-white'
+                    : 'border-slate-700/50 bg-slate-800/40 text-slate-400 hover:text-white hover:border-slate-600'
+                }`}
+              >
+                <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: BRAND_COLORS[i % BRAND_COLORS.length] }} />
+                {m.make}
+                <span className="text-slate-600">{m.count}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Model drilldown — expands when a make is selected */}
+          {selectedMake && make_model_breakdown?.[selectedMake] && make_model_breakdown[selectedMake].length > 0 && (
+            <div className="mt-3 border-t border-slate-800 pt-3">
+              <p className="text-xs font-bold text-white mb-2">
                 {selectedMake} — top models sold
               </p>
               <div className="flex flex-wrap gap-2">
