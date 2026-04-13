@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend,
 } from 'recharts'
-import { TrendingUp, Car, DollarSign, Clock, Gauge, AlertTriangle, MapPin, ExternalLink } from 'lucide-react'
+import { TrendingUp, Car, DollarSign, Gauge, AlertTriangle, MapPin, ExternalLink } from 'lucide-react'
 import { getAnalytics } from '../api'
 import { useDealer } from '../context/DealerContext'
 import type { AnalyticsData } from '../types'
@@ -182,13 +182,6 @@ export default function Analytics() {
           accent="from-emerald-500/20 to-emerald-600/5"
         />
         <KpiCard
-          icon={<Clock className="w-5 h-5" />}
-          label="Avg Days on Lot"
-          value={`${summary.avg_days_on_lot}d`}
-          sub="before sold"
-          accent="from-cyan-500/20 to-cyan-600/5"
-        />
-        <KpiCard
           icon={<Gauge className="w-5 h-5" />}
           label="Avg Mileage"
           value={summary.avg_mileage.toLocaleString()}
@@ -213,10 +206,6 @@ export default function Analytics() {
             <div>
               <p className="text-xs text-slate-500">Avg Price</p>
               <p className="text-2xl font-bold text-white">{fmtFull$(mogPerf.avg_price)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Avg Days on Lot</p>
-              <p className="text-2xl font-bold text-white">{mogPerf.avg_days}d</p>
             </div>
             <div>
               <p className="text-xs text-slate-500">Best-Selling Make</p>
