@@ -1605,3 +1605,243 @@ async def trigger_scrape(background_tasks: BackgroundTasks):
             db.close()
     background_tasks.add_task(_safe_scrape)
     return {"message": "Scrape triggered in background"}
+
+
+# ─── Analytics ────────────────────────────────────────────────────────────────
+
+@app.get("/api/analytics")
+def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)):
+    """
+    Comprehensive sales analytics derived from vehicles where is_active=False.
+    These are the true sold/off-lot units — much cleaner than raw removed events
+    which include scraping noise from partial scrapes and VIN reconciliation.
+
+    When dealer_id is provided, scopes all stats to that location.
+    When absent, returns aggregate + per-location breakdown.
+    """
+    from sqlalchemy import case as sa_case
+
+    # ── Base query: sold vehicles (is_active=False) ──────────────────────────
+    base = db.query(models.Vehicle).filter(models.Vehicle.is_active == False)
+    if dealer_id:
+        base = base.filter(models.Vehicle.dealer_id == dealer_id)
+
+    sold = base.all()
+    total_sold = len(sold)
+
+    if total_sold == 0:
+        return {
+            "total_sold": 0, "summary": {}, "top_makes": [], "top_models": [],
+            "top_colors": [], "body_styles": [], "condition_split": {},
+            "price_buckets": [], "velocity_by_make": [], "weekly_trend": [],
+            "location_performance": [], "cars_to_move": [],
+        }
+
+    # ── Summary stats ────────────────────────────────────────────────────────
+    prices   = [v.price    for v in sold if v.price    and v.price > 0]
+    mileages = [v.mileage  for v in sold if v.mileage  and v.mileage > 0]
+    days     = [v.days_on_lot for v in sold if v.days_on_lot and v.days_on_lot > 0]
+    dates    = [v.last_seen   for v in sold if v.last_seen]
+
+    summary = {
+        "total_sold":      total_sold,
+        "avg_price":       round(sum(prices) / len(prices), 0)   if prices   else 0,
+        "avg_mileage":     round(sum(mileages) / len(mileages), 0) if mileages else 0,
+        "avg_days_on_lot": round(sum(days) / len(days), 1)        if days     else 0,
+        "date_from":       min(dates).strftime("%Y-%m-%d") if dates else None,
+        "date_to":         max(dates).strftime("%Y-%m-%d") if dates else None,
+    }
+
+    # ── Top makes ────────────────────────────────────────────────────────────
+    make_counts: dict[str, int] = {}
+    for v in sold:
+        if v.make:
+            make_counts[v.make] = make_counts.get(v.make, 0) + 1
+    top_makes = [
+        {"make": m, "count": c, "pct": round(c / total_sold * 100, 1)}
+        for m, c in sorted(make_counts.items(), key=lambda x: -x[1])[:12]
+    ]
+
+    # ── Top models (year + make + model) ─────────────────────────────────────
+    model_counts: dict[tuple, int] = {}
+    model_prices: dict[tuple, list] = {}
+    for v in sold:
+        if v.make and v.model:
+            key = (v.year or 0, v.make, v.model)
+            model_counts[key] = model_counts.get(key, 0) + 1
+            if v.price and v.price > 0:
+                model_prices.setdefault(key, []).append(v.price)
+    top_models = [
+        {
+            "year": k[0], "make": k[1], "model": k[2],
+            "count": c,
+            "avg_price": round(sum(model_prices.get(k, [])) / len(model_prices[k]), 0)
+                         if model_prices.get(k) else 0,
+        }
+        for k, c in sorted(model_counts.items(), key=lambda x: -x[1])[:15]
+    ]
+
+    # ── Top colors ───────────────────────────────────────────────────────────
+    color_counts: dict[str, int] = {}
+    for v in sold:
+        c_raw = (v.exterior_color or "").strip()
+        if c_raw:
+            color_counts[c_raw] = color_counts.get(c_raw, 0) + 1
+    top_colors = [
+        {"color": col, "count": cnt, "pct": round(cnt / total_sold * 100, 1)}
+        for col, cnt in sorted(color_counts.items(), key=lambda x: -x[1])[:12]
+    ]
+
+    # ── Body styles ──────────────────────────────────────────────────────────
+    body_counts: dict[str, int] = {}
+    for v in sold:
+        b = (v.body_style or "").strip() or "Unknown"
+        body_counts[b] = body_counts.get(b, 0) + 1
+    body_styles = [
+        {"body_style": b, "count": c, "pct": round(c / total_sold * 100, 1)}
+        for b, c in sorted(body_counts.items(), key=lambda x: -x[1])
+        if b != "Unknown"
+    ]
+
+    # ── Condition split ──────────────────────────────────────────────────────
+    new_count      = sum(1 for v in sold if (v.condition or "").lower() == "new")
+    preowned_count = total_sold - new_count
+    condition_split = {
+        "new":      new_count,
+        "preowned": preowned_count,
+        "new_pct":      round(new_count / total_sold * 100, 1),
+        "preowned_pct": round(preowned_count / total_sold * 100, 1),
+    }
+
+    # ── Price buckets ────────────────────────────────────────────────────────
+    buckets = [
+        ("Under $15k",   0,      15000),
+        ("$15k–$25k",    15000,  25000),
+        ("$25k–$35k",    25000,  35000),
+        ("$35k–$50k",    35000,  50000),
+        ("$50k–$75k",    50000,  75000),
+        ("$75k+",        75000,  None),
+    ]
+    price_buckets = []
+    for label, lo, hi in buckets:
+        cnt = sum(
+            1 for v in sold
+            if v.price and v.price >= lo and (hi is None or v.price < hi)
+        )
+        if cnt > 0:
+            price_buckets.append({
+                "range": label, "count": cnt,
+                "pct": round(cnt / total_sold * 100, 1),
+            })
+
+    # ── Velocity by make (avg days_on_lot per make) ──────────────────────────
+    make_days: dict[str, list] = {}
+    for v in sold:
+        if v.make and v.days_on_lot and v.days_on_lot > 0:
+            make_days.setdefault(v.make, []).append(v.days_on_lot)
+    velocity_by_make = sorted(
+        [
+            {"make": m, "avg_days": round(sum(d) / len(d), 1), "sample": len(d)}
+            for m, d in make_days.items() if len(d) >= 3
+        ],
+        key=lambda x: x["avg_days"],
+    )[:12]
+
+    # ── Weekly trend (sold per week using last_seen date) ────────────────────
+    week_counts: dict[str, int] = {}
+    for v in sold:
+        if v.last_seen:
+            # ISO week label: "Apr 07"
+            week_start = v.last_seen - timedelta(days=v.last_seen.weekday())
+            label = week_start.strftime("%b %d")
+            week_counts[label] = week_counts.get(label, 0) + 1
+    weekly_trend = [
+        {"week": w, "sold": c}
+        for w, c in sorted(week_counts.items(), key=lambda x: x[0])
+    ]
+
+    # ── Location performance (all-locations query only) ───────────────────────
+    location_performance = []
+    if not dealer_id:
+        loc_stats: dict[str, dict] = {}
+        for v in sold:
+            loc = v.location_name or "Unknown"
+            did = v.dealer_id
+            if loc not in loc_stats:
+                loc_stats[loc] = {"dealer_id": did, "name": loc, "sold": 0,
+                                  "prices": [], "days": [], "makes": {}}
+            s = loc_stats[loc]
+            s["sold"] += 1
+            if v.price and v.price > 0: s["prices"].append(v.price)
+            if v.days_on_lot and v.days_on_lot > 0: s["days"].append(v.days_on_lot)
+            if v.make: s["makes"][v.make] = s["makes"].get(v.make, 0) + 1
+
+        for loc, s in sorted(loc_stats.items(), key=lambda x: -x[1]["sold"]):
+            top_make = max(s["makes"], key=s["makes"].get) if s["makes"] else ""
+            location_performance.append({
+                "dealer_id":   s["dealer_id"],
+                "name":        s["name"],
+                "sold":        s["sold"],
+                "pct":         round(s["sold"] / total_sold * 100, 1),
+                "avg_price":   round(sum(s["prices"]) / len(s["prices"]), 0) if s["prices"] else 0,
+                "avg_days":    round(sum(s["days"]) / len(s["days"]), 1)     if s["days"]   else 0,
+                "top_make":    top_make,
+            })
+
+    # ── Cars to move (current active inventory, flagged by urgency) ───────────
+    # Category avg: mean days_on_lot per make from sold vehicles
+    make_avg_days = {
+        m: round(sum(d) / len(d), 1)
+        for m, d in make_days.items() if d
+    }
+    overall_avg = summary["avg_days_on_lot"] or 14.0
+
+    active_q = db.query(models.Vehicle).filter(models.Vehicle.is_active == True)
+    if dealer_id:
+        active_q = active_q.filter(models.Vehicle.dealer_id == dealer_id)
+    active_vehicles = (
+        active_q.order_by(models.Vehicle.days_on_lot.desc()).limit(200).all()
+    )
+
+    cars_to_move = []
+    for v in active_vehicles:
+        cat_avg = make_avg_days.get(v.make, overall_avg)
+        dol = v.days_on_lot or 0
+        ratio = dol / cat_avg if cat_avg > 0 else 0
+        if ratio >= 1.2 or dol >= 20:
+            urgency = "critical" if ratio >= 2.0 or dol >= 30 else \
+                      "high"     if ratio >= 1.5 or dol >= 25 else "medium"
+            cars_to_move.append({
+                "id":            v.id,
+                "stock_number":  v.stock_number,
+                "year":          v.year,
+                "make":          v.make,
+                "model":         v.model,
+                "trim":          v.trim,
+                "price":         v.price,
+                "mileage":       v.mileage,
+                "exterior_color":v.exterior_color,
+                "days_on_lot":   dol,
+                "category_avg":  cat_avg,
+                "urgency":       urgency,
+                "location_name": v.location_name,
+                "dealer_id":     v.dealer_id,
+                "listing_url":   v.listing_url,
+                "condition":     v.condition,
+            })
+
+    cars_to_move.sort(key=lambda x: -x["days_on_lot"])
+
+    return {
+        "summary":              summary,
+        "top_makes":            top_makes,
+        "top_models":           top_models,
+        "top_colors":           top_colors,
+        "body_styles":          body_styles,
+        "condition_split":      condition_split,
+        "price_buckets":        price_buckets,
+        "velocity_by_make":     velocity_by_make,
+        "weekly_trend":         weekly_trend,
+        "location_performance": location_performance,
+        "cars_to_move":         cars_to_move[:50],
+    }
