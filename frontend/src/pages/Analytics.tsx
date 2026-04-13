@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, Legend,
 } from 'recharts'
-import { TrendingUp, TrendingDown, Car, DollarSign, Clock, Gauge, AlertTriangle, MapPin, ChevronRight, ExternalLink } from 'lucide-react'
+import { TrendingUp, Car, DollarSign, Clock, Gauge, AlertTriangle, MapPin, ExternalLink } from 'lucide-react'
 import { getAnalytics } from '../api'
 import { useDealer } from '../context/DealerContext'
 import type { AnalyticsData } from '../types'
@@ -133,8 +133,9 @@ export default function Analytics() {
     )
   }
 
-  const { summary, top_makes, top_models, top_colors, body_styles, condition_split,
-    price_buckets, velocity_by_make, weekly_trend, location_performance, cars_to_move } = data
+  const { summary, top_makes, top_models, top_years, top_colors, body_styles, condition_split,
+    price_buckets, velocity_by_make, weekly_trend, location_performance,
+    branded_location_split, cars_to_move } = data
 
   const filteredCarsToMove = urgencyFilter === 'all'
     ? cars_to_move
@@ -279,6 +280,62 @@ export default function Analytics() {
           </div>
         </div>
       </div>
+
+      {/* Best Selling Model Years */}
+      {top_years.length > 0 && (
+        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+            <div>
+              <h2 className="text-sm font-bold text-white">Best Selling Model Years</h2>
+              <p className="text-xs text-slate-500 mt-0.5">volume by vehicle model year — newer years reflect franchise new-car sales</p>
+            </div>
+            <div className="flex items-center gap-3 text-xs">
+              <span className="flex items-center gap-1.5 text-slate-500">
+                <span className="h-2 w-2 rounded-sm bg-brand-500" />New inventory
+              </span>
+              <span className="flex items-center gap-1.5 text-slate-500">
+                <span className="h-2 w-2 rounded-sm bg-cyan-500" />Recent used
+              </span>
+              <span className="flex items-center gap-1.5 text-slate-500">
+                <span className="h-2 w-2 rounded-sm bg-slate-600" />Older
+              </span>
+            </div>
+          </div>
+          <div className="h-60">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={[...top_years].sort((a, b) => b.year - a.year)}
+                margin={{ left: 0, right: 12 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                <XAxis dataKey="year" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'rgba(99,102,241,0.07)' }} />
+                <Bar dataKey="count" name="Units Sold" radius={[6, 6, 0, 0]}>
+                  {[...top_years].sort((a, b) => b.year - a.year).map((y) => (
+                    <Cell
+                      key={y.year}
+                      fill={y.year >= 2025 ? '#6366f1' : y.year >= 2022 ? '#22d3ee' : '#475569'}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Year breakdown pills */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {[...top_years].sort((a, b) => b.year - a.year).map((y) => (
+              <div key={y.year}
+                className="flex items-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-800/40 px-2.5 py-1 text-xs">
+                <span className="font-bold text-white">{y.year}</span>
+                <span className="text-slate-400">{y.count} sold</span>
+                <span className="text-slate-600">·</span>
+                <span className="text-slate-500">{y.pct}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Weekly Trend + Price Distribution */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -457,6 +514,125 @@ export default function Analytics() {
                     </tr>
                   )
                 })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Franchise: New vs Used Split */}
+      {branded_location_split.length > 0 && (
+        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
+          <div className="flex items-center gap-3 mb-1">
+            <h2 className="text-sm font-bold text-white">New vs. Used — Franchise Locations</h2>
+            <span className="rounded-full border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[10px] font-bold text-brand-400 uppercase tracking-wide">
+              {branded_location_split.length} Branded Dealers
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mb-5">OEM franchise stores only · used-only lots excluded · sorted by total volume</p>
+
+          {/* Stacked bar chart */}
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={branded_location_split}
+                layout="vertical"
+                margin={{ left: 8, right: 48 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fill: '#94a3b8', fontSize: 10 }}
+                  width={130}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v: string) => v.replace('ALM ', '').replace(' South', ' S.').replace(' West', ' W.').replace(' Marietta', ' Mar.')}
+                />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null
+                    const d = branded_location_split.find(x => x.name === label)
+                    return (
+                      <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 shadow-xl text-xs min-w-[180px]">
+                        <p className="font-bold text-white mb-2 text-[11px]">{label}</p>
+                        <div className="space-y-1">
+                          <div className="flex justify-between gap-4">
+                            <span className="text-emerald-400">New</span>
+                            <span className="font-bold text-white">{d?.new} <span className="text-slate-500 font-normal">({d?.new_pct}%)</span></span>
+                          </div>
+                          <div className="flex justify-between gap-4">
+                            <span className="text-cyan-400">Used</span>
+                            <span className="font-bold text-white">{d?.used} <span className="text-slate-500 font-normal">({d?.used_pct}%)</span></span>
+                          </div>
+                          {d?.avg_new_price ? (
+                            <div className="flex justify-between gap-4 pt-1 border-t border-slate-800 mt-1">
+                              <span className="text-slate-500">Avg New</span>
+                              <span className="text-slate-300">${d.avg_new_price.toLocaleString()}</span>
+                            </div>
+                          ) : null}
+                          {d?.avg_used_price ? (
+                            <div className="flex justify-between gap-4">
+                              <span className="text-slate-500">Avg Used</span>
+                              <span className="text-slate-300">${d.avg_used_price.toLocaleString()}</span>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    )
+                  }}
+                  cursor={{ fill: 'rgba(99,102,241,0.06)' }}
+                />
+                <Legend
+                  iconType="square"
+                  iconSize={8}
+                  formatter={(v) => <span className="text-xs text-slate-400 capitalize">{v}</span>}
+                  wrapperStyle={{ paddingTop: 8 }}
+                />
+                <Bar dataKey="new" name="New" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="used" name="Used" stackId="a" fill="#6366f1" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Summary table for franchise locations */}
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-slate-800">
+                  <th className="pb-2 text-left font-semibold text-slate-500">Location</th>
+                  <th className="pb-2 text-right font-semibold text-emerald-500">New</th>
+                  <th className="pb-2 text-right font-semibold text-brand-400">Used</th>
+                  <th className="pb-2 text-right font-semibold text-slate-500">Total</th>
+                  <th className="pb-2 text-right font-semibold text-slate-500 hidden sm:table-cell">Avg New $</th>
+                  <th className="pb-2 text-right font-semibold text-slate-500 hidden sm:table-cell">Avg Used $</th>
+                  <th className="pb-2 text-right font-semibold text-slate-500">New %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {branded_location_split.map((loc) => (
+                  <tr key={loc.dealer_id} className="border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors">
+                    <td className="py-2 font-medium text-slate-200">{loc.name}</td>
+                    <td className="py-2 text-right font-bold text-emerald-400">{loc.new}</td>
+                    <td className="py-2 text-right font-bold text-brand-400">{loc.used}</td>
+                    <td className="py-2 text-right text-slate-300">{loc.total}</td>
+                    <td className="py-2 text-right text-slate-400 hidden sm:table-cell">
+                      {loc.avg_new_price ? `$${loc.avg_new_price.toLocaleString()}` : '—'}
+                    </td>
+                    <td className="py-2 text-right text-slate-400 hidden sm:table-cell">
+                      {loc.avg_used_price ? `$${loc.avg_used_price.toLocaleString()}` : '—'}
+                    </td>
+                    <td className="py-2 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="hidden sm:block w-14 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${loc.new_pct}%` }} />
+                        </div>
+                        <span className="text-emerald-400 font-semibold">{loc.new_pct}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

@@ -1760,6 +1760,53 @@ def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)
         for w, c in sorted(week_counts.items(), key=lambda x: x[0])
     ]
 
+    # ── Top model years ──────────────────────────────────────────────────────
+    year_counts: dict[int, int] = {}
+    for v in sold:
+        if v.year:
+            year_counts[v.year] = year_counts.get(v.year, 0) + 1
+    top_years = [
+        {"year": y, "count": c, "pct": round(c / total_sold * 100, 1)}
+        for y, c in sorted(year_counts.items(), key=lambda x: -x[1])[:12]
+    ]
+
+    # ── New vs Used split per franchise (branded) location ───────────────────
+    # A "branded" location is one that has at least 1 new-condition vehicle sold.
+    # These are the OEM franchise stores (Hyundai, Kia, Ford, etc.). Used-only
+    # independents (Mall of Georgia, etc.) are excluded because they have 0 new.
+    branded_agg: dict[str, dict] = {}
+    for v in sold:
+        loc = v.location_name or "Unknown"
+        if loc not in branded_agg:
+            branded_agg[loc] = {"dealer_id": v.dealer_id, "new": 0, "used": 0,
+                                 "new_prices": [], "used_prices": []}
+        s = branded_agg[loc]
+        if (v.condition or "").lower() == "new":
+            s["new"] += 1
+            if v.price and v.price > 0: s["new_prices"].append(v.price)
+        else:
+            s["used"] += 1
+            if v.price and v.price > 0: s["used_prices"].append(v.price)
+
+    branded_location_split = sorted(
+        [
+            {
+                "dealer_id": s["dealer_id"],
+                "name": loc,
+                "new":  s["new"],
+                "used": s["used"],
+                "total": s["new"] + s["used"],
+                "new_pct":  round(s["new"]  / (s["new"] + s["used"]) * 100, 1),
+                "used_pct": round(s["used"] / (s["new"] + s["used"]) * 100, 1),
+                "avg_new_price":  round(sum(s["new_prices"])  / len(s["new_prices"]),  0) if s["new_prices"]  else 0,
+                "avg_used_price": round(sum(s["used_prices"]) / len(s["used_prices"]), 0) if s["used_prices"] else 0,
+            }
+            for loc, s in branded_agg.items()
+            if s["new"] > 0  # only franchise locations with new-car sales
+        ],
+        key=lambda x: -x["total"],
+    )
+
     # ── Location performance (all-locations query only) ───────────────────────
     location_performance = []
     if not dealer_id:
@@ -1833,15 +1880,17 @@ def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)
     cars_to_move.sort(key=lambda x: -x["days_on_lot"])
 
     return {
-        "summary":              summary,
-        "top_makes":            top_makes,
-        "top_models":           top_models,
-        "top_colors":           top_colors,
-        "body_styles":          body_styles,
-        "condition_split":      condition_split,
-        "price_buckets":        price_buckets,
-        "velocity_by_make":     velocity_by_make,
-        "weekly_trend":         weekly_trend,
-        "location_performance": location_performance,
-        "cars_to_move":         cars_to_move[:50],
+        "summary":                 summary,
+        "top_makes":               top_makes,
+        "top_models":              top_models,
+        "top_years":               top_years,
+        "top_colors":              top_colors,
+        "body_styles":             body_styles,
+        "condition_split":         condition_split,
+        "price_buckets":           price_buckets,
+        "velocity_by_make":        velocity_by_make,
+        "weekly_trend":            weekly_trend,
+        "location_performance":    location_performance,
+        "branded_location_split":  branded_location_split,
+        "cars_to_move":            cars_to_move[:50],
     }
