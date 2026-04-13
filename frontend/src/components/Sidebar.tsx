@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Car, Activity, Bell, Users, RefreshCw,
-  MapPin, ChevronDown, Check, ArrowRightLeft, X, FileText
+  MapPin, ChevronDown, Check, ArrowRightLeft, X, FileText, BarChart2
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import toast from 'react-hot-toast'
@@ -11,6 +11,7 @@ import { useScrape } from '../context/ScrapeContext'
 
 const links = [
   { to: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard'    },
+  { to: '/analytics',  icon: BarChart2,        label: 'Analytics'    },
   { to: '/carfax',     icon: FileText,        label: 'CARFAX'       },
   { to: '/inventory',  icon: Car,             label: 'Inventory'    },
   { to: '/trade-ins',  icon: ArrowRightLeft,  label: 'Trade-Ins'    },

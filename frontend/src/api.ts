@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type {
   Vehicle, VehicleEvent, WatchlistAlert, Lead, ScrapeLog,
-  Stats, Paginated, FilterOptions, Dealer, MyStats, CarfaxLookupResult
+  Stats, Paginated, FilterOptions, Dealer, MyStats, CarfaxLookupResult, AnalyticsData
 } from './types'
 
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
@@ -80,6 +80,10 @@ export const getLeadMatches = (id: number, condition?: string) =>
   api.get<Vehicle[]>(`/leads/${id}/matches`, {
     params: condition ? { condition } : {},
   }).then(r => r.data)
+
+// Analytics
+export const getAnalytics = (dealerId?: number) =>
+  api.get<AnalyticsData>('/analytics', { params: dealerId ? { dealer_id: dealerId } : {} }).then(r => r.data)
 
 // Scrape
 export const getScrapeLogs = () =>

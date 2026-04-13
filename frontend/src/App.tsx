@@ -13,6 +13,7 @@ const Watchlist = lazy(() => import('./pages/Watchlist'))
 const Leads = lazy(() => import('./pages/Leads'))
 const TradeIns = lazy(() => import('./pages/TradeIns'))
 const FindInventory = lazy(() => import('./pages/FindInventory'))
+const Analytics = lazy(() => import('./pages/Analytics'))
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
 
 const ROUTE_META: Record<string, { title: string; subtitle: string }> = {
   '/dashboard': { title: 'Dashboard', subtitle: 'Live inventory intelligence' },
+  '/analytics': { title: 'Analytics', subtitle: 'Sales performance & inventory intelligence' },
   '/inventory': { title: 'Inventory', subtitle: 'Search, sort, and export the live lot' },
   '/carfax': { title: 'CARFAX Lookup', subtitle: 'Jump from stock number to the report in one move' },
   '/trade-ins': { title: 'Trade-Ins', subtitle: 'Monitor inbound appraisals and aging units' },
@@ -96,6 +98,7 @@ function AppFrame() {
                     <Route path="/watchlist" element={<Watchlist />} />
                     <Route path="/leads" element={<Leads />} />
                     <Route path="/trade-ins" element={<TradeIns />} />
+                    <Route path="/analytics" element={<Analytics />} />
                   </Routes>
                 </Suspense>
               </div>

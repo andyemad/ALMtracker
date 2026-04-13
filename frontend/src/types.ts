@@ -157,6 +157,52 @@ export interface Dealer {
   last_scraped: string | null
 }
 
+export interface AnalyticsData {
+  summary: {
+    total_sold: number
+    avg_price: number
+    avg_mileage: number
+    avg_days_on_lot: number
+    date_from: string | null
+    date_to: string | null
+  }
+  top_makes: Array<{ make: string; count: number; pct: number }>
+  top_models: Array<{ year: number; make: string; model: string; count: number; avg_price: number }>
+  top_colors: Array<{ color: string; count: number; pct: number }>
+  body_styles: Array<{ body_style: string; count: number; pct: number }>
+  condition_split: { new: number; preowned: number; new_pct: number; preowned_pct: number }
+  price_buckets: Array<{ range: string; count: number; pct: number }>
+  velocity_by_make: Array<{ make: string; avg_days: number; sample: number }>
+  weekly_trend: Array<{ week: string; sold: number }>
+  location_performance: Array<{
+    dealer_id: number
+    name: string
+    sold: number
+    pct: number
+    avg_price: number
+    avg_days: number
+    top_make: string
+  }>
+  cars_to_move: Array<{
+    id: number
+    stock_number: string
+    year: number
+    make: string
+    model: string
+    trim: string
+    price: number | null
+    mileage: number | null
+    exterior_color: string
+    days_on_lot: number
+    category_avg: number
+    urgency: 'critical' | 'high' | 'medium'
+    location_name: string | null
+    dealer_id: number | null
+    listing_url: string
+    condition: string
+  }>
+}
+
 export interface CarfaxLookupResult {
   status: 'resolved' | 'ambiguous'
   query: string
