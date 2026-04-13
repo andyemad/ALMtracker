@@ -187,6 +187,13 @@ export default function Analytics() {
           sub="miles at sale"
           accent="from-amber-500/20 to-amber-600/5"
         />
+        <KpiCard
+          icon={<TrendingUp className="w-5 h-5" />}
+          label="Most Popular Make"
+          value={top_makes[0]?.make ?? '—'}
+          sub={top_makes[0] ? `${top_makes[0].pct}% of all sales · ${top_makes[0].count} units` : undefined}
+          accent="from-violet-500/20 to-violet-600/5"
+        />
       </div>
 
       {/* Top Makes + Body Styles row */}
