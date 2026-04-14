@@ -1622,7 +1622,12 @@ def get_analytics(dealer_id: Optional[int] = None, db: Session = Depends(get_db)
     from sqlalchemy import case as sa_case
 
     # ── Base query: sold vehicles (is_active=False) ──────────────────────────
-    base = db.query(models.Vehicle).filter(models.Vehicle.is_active == False)
+    # Exclude $0 / NULL price ("call for sales price") — not real sales
+    base = db.query(models.Vehicle).filter(
+        models.Vehicle.is_active == False,
+        models.Vehicle.price != None,
+        models.Vehicle.price > 0,
+    )
     if dealer_id:
         base = base.filter(models.Vehicle.dealer_id == dealer_id)
 
