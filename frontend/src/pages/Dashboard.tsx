@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
-  Car, TrendingUp, TrendingDown, Bell, DollarSign,
-  Clock, CheckCircle, XCircle, AlertCircle, RefreshCw, ExternalLink,
+  CheckCircle, XCircle, AlertCircle, RefreshCw, ExternalLink,
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar
+  ResponsiveContainer, BarChart, Bar,
 } from 'recharts'
 import { format, formatDistanceToNow } from 'date-fns'
 import { getStats, getEvents, getScrapeLogs, getVehicles } from '../api'
@@ -14,8 +13,53 @@ import { useDealer } from '../context/DealerContext'
 import { Link } from 'react-router-dom'
 import { useScrape } from '../context/ScrapeContext'
 
+// OKLCH color constants for recharts SVG attributes (CSS vars not supported in SVG presentation attrs)
+const C = {
+  accent:   'oklch(0.62 0.14 48)',
+  positive: 'oklch(0.58 0.08 170)',
+  danger:   'oklch(0.58 0.16 28)',
+  hairline: 'oklch(0.88 0.010 75)',
+  muted:    'oklch(0.52 0.008 65)',
+}
+
 const fmt$ = (n: number | null) => n != null ? `$${n.toLocaleString()}` : '—'
 const fmtMi = (n: number | null) => n != null ? `${n.toLocaleString()} mi` : '—'
+
+const ChartTick = ({ x, y, payload }: Record<string, any>) => (
+  <text x={x} y={y} dy={12} textAnchor="middle"
+    style={{ fill: 'var(--muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
+    {payload.value}
+  </text>
+)
+
+const YChartTick = ({ x, y, payload }: Record<string, any>) => (
+  <text x={x} y={y} dy={4} textAnchor="end"
+    style={{ fill: 'var(--muted)', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
+    {payload.value}
+  </text>
+)
+
+const ChartTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div style={{
+      background: 'var(--card)',
+      border: '1px solid var(--hairline)',
+      padding: '8px 12px',
+      borderRadius: 4,
+      fontSize: 11,
+      fontFamily: 'var(--font-mono)',
+      color: 'var(--ink)',
+    }}>
+      <p style={{ color: 'var(--muted)', marginBottom: 4 }}>{label}</p>
+      {payload.map((p: any) => (
+        <p key={p.name} style={{ color: p.color || 'var(--ink-2)' }}>
+          {p.name}: {p.value}
+        </p>
+      ))}
+    </div>
+  )
+}
 
 export default function Dashboard() {
   const { selectedDealer } = useDealer()
@@ -32,7 +76,7 @@ export default function Dashboard() {
     setLoading(true)
     Promise.all([
       getStats(dealerId),
-      getEvents({ days: 7, page_size: 12, dealer_id: dealerId }),
+      getEvents({ days: 7, page_size: 8, dealer_id: dealerId }),
       getScrapeLogs(),
       getVehicles({
         dealer_id: dealerId,
@@ -51,186 +95,259 @@ export default function Dashboard() {
 
   if (loading) return <LoadingScreen />
 
-  const statCards = [
+  const locationLabel = selectedDealer
+    ? selectedDealer.name
+    : 'All locations'
+
+  const locationSub = selectedDealer
+    ? `${selectedDealer.city} — live inventory intelligence`
+    : `${stats?.total_active?.toLocaleString() ?? '—'} vehicles tracked`
+
+  const statCells = [
     {
-      label: 'Total Inventory',
-      value: stats?.total_active ?? 0,
-      icon: Car,
-      color: 'text-blue-400',
-      bg: 'bg-blue-500/10',
-      border: 'border-blue-500/20',
+      key: 'Total inventory',
+      value: (stats?.total_active ?? 0).toLocaleString(),
+      sub: 'active lots',
+      tint: undefined as string | undefined,
       to: null as string | null,
     },
     {
-      label: 'Added Today',
-      value: stats?.added_today ?? 0,
-      icon: TrendingUp,
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10',
-      border: 'border-emerald-500/20',
-      to: '/activity?event_type=added' as string | null,
+      key: 'Added today',
+      value: `+${stats?.added_today ?? 0}`,
+      sub: 'across all lots',
+      tint: 'var(--positive)',
+      to: '/activity?event_type=added',
     },
     {
-      label: 'Removed Today',
-      value: stats?.removed_today ?? 0,
-      icon: TrendingDown,
-      color: 'text-red-400',
-      bg: 'bg-red-500/10',
-      border: 'border-red-500/20',
-      to: '/activity?event_type=removed' as string | null,
+      key: 'Removed today',
+      value: `−${stats?.removed_today ?? 0}`,
+      sub: 'sold or pulled',
+      tint: 'var(--danger)',
+      to: '/activity?event_type=removed',
     },
     {
-      label: 'Active Alerts',
-      value: stats?.active_alerts ?? 0,
-      icon: Bell,
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/10',
-      border: 'border-amber-500/20',
-      to: '/watchlist' as string | null,
+      key: 'Active alerts',
+      value: (stats?.active_alerts ?? 0).toString(),
+      sub: 'watchlist triggers',
+      tint: undefined,
+      to: '/watchlist',
     },
     {
-      label: 'Avg List Price',
+      key: 'Avg list',
       value: stats?.avg_price ? `$${(stats.avg_price / 1000).toFixed(1)}k` : '—',
-      icon: DollarSign,
-      color: 'text-violet-400',
-      bg: 'bg-violet-500/10',
-      border: 'border-violet-500/20',
-      to: null as string | null,
+      sub: 'weighted by lot',
+      tint: undefined,
+      to: null,
     },
   ]
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-slate-400 text-sm mt-0.5">
-          {selectedDealer ? `${selectedDealer.name} · ${selectedDealer.city}` : 'All 24 ALM Locations'} — live inventory intel
-        </p>
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '2rem 2.5rem' }}>
+      {/* Header */}
+      <header
+        className="flex items-start justify-between flex-wrap gap-6 pb-6"
+        style={{ borderBottom: '1px solid var(--hairline)' }}
+      >
+        <div className="min-w-0" style={{ flex: '1 1 320px' }}>
+          <div className="eyebrow">Dashboard</div>
+          <h1
+            className="serif mt-3"
+            style={{
+              fontSize: 'clamp(32px, 4vw, 44px)',
+              lineHeight: 1.1,
+              letterSpacing: '-0.015em',
+              color: 'var(--ink)',
+            }}
+          >
+            {locationLabel}
+          </h1>
+          <p className="text-sm mt-3" style={{ color: 'var(--muted)', lineHeight: 1.5 }}>
+            {locationSub}
+          </p>
         </div>
         <ScrapeStatus stats={stats} scraping={scraping} />
-      </div>
+      </header>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {statCards.map(card => {
+      {/* 5-metric stat strip */}
+      <section
+        className="grid grid-cols-2 md:grid-cols-5 mt-8"
+        style={{ borderTop: '1px solid var(--hairline)', borderBottom: '1px solid var(--hairline)' }}
+      >
+        {statCells.map((cell, i) => {
           const inner = (
             <>
-              <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center mb-3`}>
-                <card.icon className={`w-4 h-4 ${card.color}`} />
+              <div className="eyebrow">{cell.key}</div>
+              <div
+                className="midnum mt-2 tnum"
+                style={{ color: cell.tint ?? 'var(--ink)' }}
+              >
+                {cell.value}
               </div>
-              <div className="text-2xl font-bold text-white">{card.value}</div>
-              <div className="text-xs text-slate-400 mt-0.5">{card.label}</div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>{cell.sub}</div>
             </>
           )
-          const cls = `card p-4 border ${card.border} ${card.to ? 'hover:border-slate-500 cursor-pointer transition-all' : ''}`
-          return card.to ? (
-            <Link key={card.label} to={card.to} className={cls}>{inner}</Link>
+          const cellStyle: React.CSSProperties = {
+            padding: '20px 20px',
+            borderLeft: i > 0 ? '1px solid var(--hairline)' : 'none',
+          }
+          return cell.to ? (
+            <Link
+              key={cell.key}
+              to={cell.to}
+              style={cellStyle}
+              className="block t"
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-2)')}
+              onMouseLeave={e => (e.currentTarget.style.background = '')}
+            >
+              {inner}
+            </Link>
           ) : (
-            <div key={card.label} className={cls}>{inner}</div>
+            <div key={cell.key} style={cellStyle}>{inner}</div>
           )
         })}
-      </div>
+      </section>
 
-      {/* Charts + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Inventory Trend */}
-        <div className="lg:col-span-2 card p-5">
-          <h2 className="text-sm font-semibold text-slate-300 mb-4">Inventory Trend (14 days)</h2>
+      {/* Trend chart + Activity stream */}
+      <section className="grid grid-cols-12 gap-8 mt-10">
+        <div className="col-span-12 lg:col-span-8">
+          <div className="flex items-baseline justify-between flex-wrap gap-4">
+            <div className="eyebrow">Inventory · last 14 days</div>
+            <div className="flex items-center gap-4" style={{ fontSize: 11, color: 'var(--muted)' }}>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: C.accent }} />
+                Total units
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-0.5" style={{ background: C.positive }} />
+                Added
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-0.5" style={{ background: C.danger }} />
+                Removed
+              </span>
+            </div>
+          </div>
+          <div className="mt-4">
+            {stats?.trend && stats.trend.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <AreaChart data={stats.trend} margin={{ top: 8, right: 4, left: 0, bottom: 16 }}>
+                  <defs>
+                    <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={C.accent} stopOpacity={0.12} />
+                      <stop offset="95%" stopColor={C.accent} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="2 5" stroke={C.hairline} />
+                  <XAxis dataKey="date" tick={<ChartTick />} tickLine={false} axisLine={false} />
+                  <YAxis tick={<YChartTick />} tickLine={false} axisLine={false} width={36} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Area
+                    type="monotone" dataKey="count"
+                    stroke={C.accent} fill="url(#trendGrad)"
+                    strokeWidth={1.6} dot={false} name="Total"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyChart height={240} />
+            )}
+          </div>
+        </div>
+
+        {/* Activity stream */}
+        <div className="col-span-12 lg:col-span-4 lg:pl-8 hairline-v">
+          <div className="flex items-baseline justify-between">
+            <div className="eyebrow">Activity stream</div>
+            <Link to="/activity" style={{ fontSize: 11, color: 'var(--accent)' }}
+              className="hover:underline">Full log →</Link>
+          </div>
+          <div className="mt-4">
+            {events.length === 0 ? (
+              <p style={{ fontSize: 13, color: 'var(--muted)', paddingTop: 24, textAlign: 'center' }}>
+                No activity yet
+              </p>
+            ) : (
+              events.map((ev, i) => <EventRow key={ev.id} ev={ev} border={i > 0} />)
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Daily changes + Scrape history */}
+      <section className="grid grid-cols-12 gap-8 mt-10">
+        <div className="col-span-12 lg:col-span-5">
+          <div className="eyebrow">Daily changes</div>
           {stats?.trend && stats.trend.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={stats.trend}>
-                <defs>
-                  <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 11 }} />
-                <YAxis stroke="#64748b" tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} />
-                <Area type="monotone" dataKey="count" stroke="#3b82f6" fill="url(#grad)" strokeWidth={2} dot={false} name="Total" />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="mt-4">
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={stats.trend} margin={{ top: 8, right: 4, left: 0, bottom: 16 }}>
+                  <CartesianGrid strokeDasharray="2 5" stroke={C.hairline} />
+                  <XAxis dataKey="date" tick={<ChartTick />} tickLine={false} axisLine={false} />
+                  <YAxis tick={<YChartTick />} tickLine={false} axisLine={false} width={28} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Bar dataKey="added" fill={C.positive} name="Added" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="removed" fill={C.danger} name="Removed" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
-            <EmptyChart />
+            <EmptyChart height={200} />
           )}
         </div>
 
-        {/* Recent Activity */}
-        <div className="card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-slate-300">Recent Activity</h2>
-            <Link to="/activity" className="text-xs text-brand-400 hover:text-brand-300 transition-colors">
-              View all →
-            </Link>
+        {/* Scrape history */}
+        <div className="col-span-12 lg:col-span-7 lg:pl-8 hairline-v">
+          <div className="flex items-baseline justify-between">
+            <div className="eyebrow">Scrape history</div>
+            <span className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>
+              {logs.length} runs
+            </span>
           </div>
-          <div className="space-y-2 overflow-y-auto max-h-[220px]">
-            {events.length === 0 ? (
-              <p className="text-slate-500 text-xs text-center py-8">No activity yet</p>
-            ) : (
-              events.map(ev => <EventRow key={ev.id} ev={ev} />)
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Daily Add/Remove Chart + Scrape Logs */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Adds/Removes */}
-        {stats?.trend && stats.trend.length > 0 && (
-          <div className="card p-5">
-            <h2 className="text-sm font-semibold text-slate-300 mb-4">Daily Changes</h2>
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={stats.trend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="date" stroke="#64748b" tick={{ fontSize: 11 }} />
-                <YAxis stroke="#64748b" tick={{ fontSize: 11 }} />
-                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }} />
-                <Bar dataKey="added" fill="#22c55e" name="Added" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="removed" fill="#ef4444" name="Removed" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Scrape History */}
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-slate-300 mb-4">Scrape History</h2>
-          <div className="space-y-2 overflow-y-auto max-h-[180px]">
+          <div className="mt-4">
             {logs.length === 0 ? (
-              <p className="text-slate-500 text-xs text-center py-6">No scrapes yet</p>
+              <p style={{ fontSize: 13, color: 'var(--muted)', paddingTop: 24, textAlign: 'center' }}>
+                No scrapes yet
+              </p>
             ) : (
-              logs.slice(0, 8).map(log => <LogRow key={log.id} log={log} />)
+              logs.slice(0, 8).map((log, i) => <LogRow key={log.id} log={log} border={i > 0} />)
             )}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="card p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
+      {/* Aging inventory queue */}
+      <section className="mt-12">
+        <div
+          className="flex items-baseline justify-between flex-wrap gap-4 pb-4"
+          style={{ borderBottom: '1px solid var(--hairline)' }}
+        >
           <div>
-            <h2 className="text-sm font-semibold text-slate-300">Units To Move First</h2>
-            <p className="mt-1 text-xs text-slate-500">
-              Oldest active inventory, sorted by days on lot so the team has a sell-now queue.
+            <div className="eyebrow">Move first</div>
+            <h2
+              className="serif mt-1"
+              style={{ fontSize: 30, color: 'var(--ink)', lineHeight: 1.1 }}
+            >
+              Aging inventory queue
+            </h2>
+            <p className="text-sm mt-2 max-w-lg" style={{ color: 'var(--muted)', lineHeight: 1.5 }}>
+              Units past 30 days on the lot — sorted by urgency. Review pricing or stage for featured placement.
             </p>
           </div>
-          <Link to="/inventory" className="text-xs text-brand-400 hover:text-brand-300 transition-colors">
-            Open inventory →
-          </Link>
+          <Link to="/inventory" className="btn">Open inventory →</Link>
         </div>
 
         {priorityUnits.length === 0 ? (
-          <p className="py-8 text-center text-xs text-slate-500">No active units available for prioritization yet</p>
+          <p style={{ fontSize: 13, color: 'var(--muted)', padding: '48px 0', textAlign: 'center' }}>
+            No active units available for prioritization yet
+          </p>
         ) : (
-          <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-            {priorityUnits.map(vehicle => (
-              <PriorityUnitCard key={vehicle.id} vehicle={vehicle} />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            {priorityUnits.map((vehicle, i) => (
+              <PriorityUnitCard key={vehicle.id} vehicle={vehicle} index={i} />
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   )
 }
@@ -239,72 +356,68 @@ function ScrapeStatus({ stats, scraping }: { stats: Stats | null; scraping: bool
   const isScraping = scraping || stats?.scraping_now
   if (isScraping) {
     return (
-      <div className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border
-                      bg-amber-500/10 text-amber-400 border-amber-500/30 animate-pulse">
-        <RefreshCw className="w-3 h-3 animate-spin" />
-        Scraping...
+      <div className="flex items-center gap-2">
+        <div className="chip animate-pulse">
+          <RefreshCw className="w-3 h-3 animate-spin" style={{ color: 'var(--accent)' }} />
+          <span>Scraping...</span>
+        </div>
       </div>
     )
   }
   if (!stats?.last_scrape) return null
+
   const lastScrape = new Date(`${stats.last_scrape}Z`)
   const ok = stats.last_scrape_status === 'success'
   const stale = ok && Date.now() - lastScrape.getTime() > 12 * 60 * 60 * 1000
-  const tone = !ok
-    ? 'bg-red-500/10 text-red-400 border-red-500/30'
-    : stale
-      ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
   const Icon = !ok ? XCircle : stale ? AlertCircle : CheckCircle
-  const label = !ok ? 'Last sync failed' : stale ? 'Snapshot last synced' : 'Last sync'
+  const iconColor = !ok ? 'var(--danger)' : stale ? 'var(--warn)' : 'var(--positive)'
+
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex flex-col items-end gap-1">
-        <button
-          onClick={() => {
-            window.alert('To bookmark: press Ctrl+D (Windows) or Cmd+D (Mac)')
-          }}
-          className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
-        >
-          Bookmark this link
-        </button>
-        <a
-          href="https://almtracker.vercel.app"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2 text-xs text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
-        >
-          <ExternalLink className="h-3 w-3" />
-          almtracker.vercel.app
-        </a>
+    <div className="flex items-center gap-2 flex-wrap">
+      <a
+        href="https://almtracker.vercel.app"
+        target="_blank"
+        rel="noreferrer"
+        className="btn"
+        title="Open ALM Tracker"
+      >
+        <ExternalLink className="h-3 w-3" />
+        almtracker.vercel.app
+      </a>
+      <div className="chip">
+        <span className="w-1.5 h-1.5 rounded-full live-dot" style={{ background: iconColor }} />
+        <Icon className="w-3 h-3" style={{ color: iconColor }} />
+        <span className="mono" style={{ fontSize: 11 }}>
+          {ok ? 'Synced' : 'Failed'} {formatDistanceToNow(lastScrape, { addSuffix: true })}
+        </span>
       </div>
-      <div className={`rounded-xl border px-3 py-2 ${tone}`}>
-        <div className="flex items-center gap-2 text-xs">
-          <Icon className="h-3 w-3" />
-          <span>{label} {formatDistanceToNow(lastScrape, { addSuffix: true })}</span>
-        </div>
-        <p className="mt-1 text-[11px] text-slate-300">
-          {format(lastScrape, "MMM d, yyyy 'at' h:mm a")}
-        </p>
-      </div>
+      <span className="mono" style={{ fontSize: 10.5, color: 'var(--muted)' }}>
+        {format(lastScrape, "MMM d 'at' h:mm a")}
+      </span>
     </div>
   )
 }
 
-function EventRow({ ev }: { ev: VehicleEvent }) {
-  const map = {
-    added: { cls: 'text-emerald-400', dot: 'bg-emerald-500' },
-    removed: { cls: 'text-red-400', dot: 'bg-red-500' },
-    price_change: { cls: 'text-amber-400', dot: 'bg-amber-500' },
-  }
-  const s = map[ev.event_type] ?? map.added
+function EventRow({ ev, border }: { ev: VehicleEvent; border: boolean }) {
+  const dotColor =
+    ev.event_type === 'added' ? 'var(--positive)'
+    : ev.event_type === 'removed' ? 'var(--danger)'
+    : 'var(--accent)'
   return (
-    <div className="flex items-start gap-2.5 py-1.5">
-      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${s.dot}`} />
+    <div
+      className="flex gap-3 py-3"
+      style={{ borderTop: border ? '1px solid var(--hairline)' : 'none' }}
+    >
+      <div
+        className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
+        style={{ background: dotColor }}
+      />
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-slate-300 truncate">{ev.description}</p>
-        <p className="text-[11px] text-slate-500 mt-0.5">
-          {ev.location_name && <span className="text-slate-400">{ev.location_name} · </span>}
+        <p className="truncate" style={{ fontSize: 12.5, color: 'var(--ink)', lineHeight: 1.4 }}>
+          {ev.description}
+        </p>
+        <p className="mono truncate mt-0.5" style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
+          {ev.location_name && <span style={{ color: 'var(--ink-2)' }}>{ev.location_name} · </span>}
           {formatDistanceToNow(new Date(ev.timestamp + 'Z'), { addSuffix: true })}
         </p>
       </div>
@@ -312,116 +425,166 @@ function EventRow({ ev }: { ev: VehicleEvent }) {
   )
 }
 
-function LogRow({ log }: { log: ScrapeLog }) {
+function LogRow({ log, border }: { log: ScrapeLog; border: boolean }) {
   const ok = log.status === 'success'
   const Icon = ok ? CheckCircle : log.status === 'error' ? XCircle : AlertCircle
-  const cls = ok ? 'text-emerald-400' : log.status === 'error' ? 'text-red-400' : 'text-amber-400'
+  const iconColor = ok ? 'var(--positive)' : log.status === 'error' ? 'var(--danger)' : 'var(--warn)'
   return (
-    <div className="flex items-center gap-3 py-1.5 text-xs">
-      <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${cls}`} />
-      <div className="flex-1 min-w-0">
-        <span className="text-slate-300">{log.vehicles_found} vehicles</span>
-        {log.added_count > 0 && <span className="text-emerald-400 ml-1">+{log.added_count}</span>}
-        {log.removed_count > 0 && <span className="text-red-400 ml-1">-{log.removed_count}</span>}
-        {log.method && <span className="text-slate-600 ml-1">({log.method})</span>}
+    <div
+      className="flex items-center gap-4 py-3"
+      style={{ borderTop: border ? '1px solid var(--hairline)' : 'none' }}
+    >
+      <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: iconColor }} />
+      <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
+        <span className="mono tnum" style={{ fontSize: 12, color: 'var(--ink)' }}>
+          {log.vehicles_found.toLocaleString()} vehicles
+        </span>
+        {log.added_count > 0 && (
+          <span className="mono tnum" style={{ fontSize: 11, color: 'var(--positive)' }}>+{log.added_count}</span>
+        )}
+        {log.removed_count > 0 && (
+          <span className="mono tnum" style={{ fontSize: 11, color: 'var(--danger)' }}>−{log.removed_count}</span>
+        )}
+        {log.method && (
+          <span className="mono truncate" style={{ fontSize: 10.5, color: 'var(--muted)' }}>({log.method})</span>
+        )}
       </div>
-      <div className="text-slate-500 flex items-center gap-1 flex-shrink-0">
-        <Clock className="w-3 h-3" />
+      <span className="mono flex-shrink-0" style={{ fontSize: 10.5, color: 'var(--muted)' }}>
         {formatDistanceToNow(new Date(log.timestamp + 'Z'), { addSuffix: true })}
-      </div>
+      </span>
     </div>
   )
 }
 
-function PriorityUnitCard({ vehicle }: { vehicle: Vehicle }) {
-  const urgencyTone = vehicle.days_on_lot > 60
-    ? 'border-red-500/30 bg-red-500/5'
-    : vehicle.days_on_lot > 45
-      ? 'border-amber-500/30 bg-amber-500/5'
-      : 'border-slate-800 bg-slate-900/70'
+function AgingBar({ days }: { days: number }) {
+  const pct = Math.min(1, days / 90)
+  const color = days >= 60 ? 'var(--danger)' : days >= 45 ? 'var(--warn)' : days >= 15 ? 'var(--accent)' : 'var(--positive)'
+  return (
+    <div className="flex items-center gap-2 w-full">
+      <div className="relative flex-1 overflow-hidden" style={{ height: 10 }}>
+        <div className="absolute inset-y-0 left-0 w-full matrix" style={{ color: 'var(--hairline-2)' }} />
+        <div className="absolute inset-y-0 left-0 matrix" style={{ width: `${pct * 100}%`, color }} />
+      </div>
+      <span className="mono tnum whitespace-nowrap" style={{ fontSize: 10, color }}>{days}d</span>
+    </div>
+  )
+}
 
-  const badgeTone = vehicle.days_on_lot > 60
-    ? 'border-red-500/30 bg-red-500/10 text-red-300'
-    : vehicle.days_on_lot > 45
-      ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
-      : 'border-slate-700 bg-slate-800 text-slate-300'
+function PriorityUnitCard({ vehicle, index }: { vehicle: Vehicle; index: number }) {
+  const ageColor =
+    vehicle.days_on_lot >= 60 ? 'var(--danger)'
+    : vehicle.days_on_lot >= 45 ? 'var(--warn)'
+    : 'var(--muted)'
 
   return (
-    <div className={`rounded-2xl border p-4 ${urgencyTone}`}>
+    <article
+      style={{
+        padding: '20px 20px',
+        borderLeft: '1px solid var(--hairline)',
+        borderBottom: '1px solid var(--hairline)',
+      }}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Stock #{vehicle.stock_number}
-          </p>
-          <h3 className="mt-1 truncate text-sm font-semibold text-white">
-            {[vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')}
+          <div className="mono tnum" style={{ fontSize: 10.5, color: 'var(--muted)' }}>
+            #{vehicle.stock_number}
+          </div>
+          <h3 className="serif mt-1" style={{ fontSize: 22, color: 'var(--ink)', lineHeight: 1.2 }}>
+            {vehicle.year} {vehicle.make}
           </h3>
-          <p className="mt-1 truncate text-xs text-slate-400">{vehicle.trim || vehicle.body_style || 'No trim listed'}</p>
+          <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 6 }}>
+            {vehicle.model}{vehicle.trim ? ` · ${vehicle.trim}` : ''}
+          </div>
         </div>
-        <div className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${badgeTone}`}>
-          {vehicle.days_on_lot} days
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-        <div>
-          <p className="text-slate-500">Price</p>
-          <p className="mt-1 font-semibold text-white">{fmt$(vehicle.price)}</p>
-        </div>
-        <div>
-          <p className="text-slate-500">Mileage</p>
-          <p className="mt-1 text-slate-200">{fmtMi(vehicle.mileage)}</p>
+        <div className="text-right flex-shrink-0">
+          <span className="mono tnum" style={{ fontSize: 11, color: ageColor }}>
+            {vehicle.days_on_lot}d
+          </span>
+          <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>on lot</div>
         </div>
       </div>
 
-      <p className="mt-3 text-[11px] text-slate-500">
-        First seen {formatDistanceToNow(new Date(vehicle.first_seen + 'Z'), { addSuffix: true })}
-      </p>
+      {/* Striped image placeholder */}
+      <div
+        className="stripes mt-4 w-full flex items-end justify-between gap-2 p-2 mono"
+        style={{ aspectRatio: '16/7', fontSize: 10, color: 'var(--muted)' }}
+      >
+        <span className="truncate">{vehicle.exterior_color || '—'}</span>
+        <span className="flex-shrink-0">product shot</span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <div>
+          <div className="eyebrow">Price</div>
+          <div className="serif tnum mt-0.5" style={{ fontSize: 18, color: 'var(--ink)' }}>
+            {fmt$(vehicle.price)}
+          </div>
+        </div>
+        <div>
+          <div className="eyebrow">Mileage</div>
+          <div className="mono tnum mt-1" style={{ fontSize: 12, color: 'var(--ink-2)' }}>
+            {fmtMi(vehicle.mileage)}
+          </div>
+        </div>
+        <div>
+          <div className="eyebrow">Lot</div>
+          <div className="mt-1 truncate" style={{ fontSize: 12, color: 'var(--ink-2)' }}>
+            {(vehicle.location_name ?? '—').replace('ALM ', '')}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <AgingBar days={vehicle.days_on_lot} />
+      </div>
 
       <div className="mt-4 flex items-center gap-2">
-        <Link to={`/inventory?search=${encodeURIComponent(vehicle.stock_number)}`} className="btn-secondary px-3 py-2 text-xs">
-          Review in ALM
+        <Link
+          to={`/inventory?search=${encodeURIComponent(vehicle.stock_number)}`}
+          className="btn"
+        >
+          Review unit
         </Link>
         {vehicle.listing_url && (
-          <a
-            href={vehicle.listing_url}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-ghost px-3 py-2 text-xs"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            Listing
+          <a href={vehicle.listing_url} target="_blank" rel="noreferrer" className="btn btn-ghost">
+            View listing
           </a>
         )}
       </div>
-    </div>
+    </article>
   )
 }
 
-
-function EmptyChart() {
+function EmptyChart({ height = 200 }: { height?: number }) {
   return (
-    <div className="h-[200px] flex items-center justify-center">
-      <p className="text-slate-600 text-sm">Chart data will appear after first scrape</p>
+    <div
+      className="flex items-center justify-center"
+      style={{ height, borderTop: '1px dashed var(--hairline)' }}
+    >
+      <p style={{ fontSize: 13, color: 'var(--muted)' }}>Chart data will appear after first scrape</p>
     </div>
   )
 }
 
 function LoadingScreen() {
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="animate-pulse space-y-6">
-        <div className="h-8 w-48 bg-slate-800 rounded" />
-        <div className="grid grid-cols-5 gap-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-24 bg-slate-800 rounded-xl" />
-          ))}
-        </div>
-        <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2 h-64 bg-slate-800 rounded-xl" />
-          <div className="h-64 bg-slate-800 rounded-xl" />
-        </div>
-        <div className="h-56 bg-slate-800 rounded-xl" />
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '2rem 2.5rem' }}
+      className="animate-pulse space-y-8">
+      <div className="h-10 w-64 rounded" style={{ background: 'var(--bg-2)' }} />
+      <div
+        className="grid grid-cols-5"
+        style={{ borderTop: '1px solid var(--hairline)', borderBottom: '1px solid var(--hairline)' }}
+      >
+        {[...Array(5)].map((_, i) => (
+          <div key={i} style={{ padding: '20px', borderLeft: i > 0 ? '1px solid var(--hairline)' : 'none' }}>
+            <div className="h-2 w-16 rounded mb-3" style={{ background: 'var(--bg-2)' }} />
+            <div className="h-8 w-20 rounded" style={{ background: 'var(--bg-2)' }} />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-12 gap-8">
+        <div className="col-span-8 h-64 rounded" style={{ background: 'var(--bg-2)' }} />
+        <div className="col-span-4 h-64 rounded" style={{ background: 'var(--bg-2)' }} />
       </div>
     </div>
   )

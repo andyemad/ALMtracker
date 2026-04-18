@@ -1,7 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Car, Activity, Bell, Users, RefreshCw,
-  MapPin, ChevronDown, Check, ArrowRightLeft, X, FileText, BarChart2
+  MapPin, ChevronDown, Check, ArrowRightLeft, X, FileText, BarChart2,
+  Sun, Moon,
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import toast from 'react-hot-toast'
@@ -9,15 +10,15 @@ import { triggerScrape, getScrapeLogs } from '../api'
 import { useDealer } from '../context/DealerContext'
 import { useScrape } from '../context/ScrapeContext'
 
-const links = [
-  { to: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard'    },
-  { to: '/analytics',  icon: BarChart2,        label: 'Analytics'    },
-  { to: '/carfax',     icon: FileText,        label: 'CARFAX'       },
-  { to: '/inventory',  icon: Car,             label: 'Inventory'    },
-  { to: '/trade-ins',  icon: ArrowRightLeft,  label: 'Trade-Ins'    },
-  { to: '/activity',   icon: Activity,        label: 'Activity Log' },
-  { to: '/watchlist',  icon: Bell,            label: 'Watchlist'    },
-  { to: '/leads',      icon: Users,           label: 'Leads'        },
+const NAV_LINKS = [
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/analytics', icon: BarChart2,       label: 'Analytics' },
+  { to: '/carfax',    icon: FileText,        label: 'CARFAX'    },
+  { to: '/inventory', icon: Car,             label: 'Inventory' },
+  { to: '/trade-ins', icon: ArrowRightLeft,  label: 'Trade-Ins' },
+  { to: '/activity',  icon: Activity,        label: 'Activity'  },
+  { to: '/watchlist', icon: Bell,            label: 'Watchlist' },
+  { to: '/leads',     icon: Users,           label: 'Leads'     },
 ]
 
 interface SidebarProps {
@@ -28,12 +29,14 @@ interface SidebarProps {
 
 export default function Sidebar({ mobile = false, open = false, onClose }: SidebarProps) {
   const [showPicker, setShowPicker] = useState(false)
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.getAttribute('data-theme') === 'dark'
+  )
   const pickerRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const { dealers, selectedDealer, setSelectedDealer } = useDealer()
   const { scraping, triggerScraping } = useScrape()
 
-  // Close picker when clicking outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
@@ -51,6 +54,14 @@ export default function Sidebar({ mobile = false, open = false, onClose }: Sideb
     }
   }, [location.pathname])
 
+  const handleToggleTheme = () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'light'
+    const next = current === 'dark' ? 'light' : 'dark'
+    document.documentElement.setAttribute('data-theme', next)
+    localStorage.setItem('alm-theme', next)
+    setIsDark(next === 'dark')
+  }
+
   const handleScrape = async () => {
     try {
       const currentLogs = await getScrapeLogs()
@@ -66,18 +77,30 @@ export default function Sidebar({ mobile = false, open = false, onClose }: Sideb
   const totalVehicles = dealers.reduce((sum, d) => sum + d.active_vehicle_count, 0)
 
   const sidebarContent = (
-    <div className="flex h-full flex-col overflow-hidden rounded-r-[28px] border-r border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
-      <div className="px-5 py-5 border-b border-slate-800/80">
+    <div
+      className="flex h-full flex-col"
+      style={{ width: 264, background: 'var(--card)', borderRight: '1px solid var(--hairline)' }}
+    >
+      {/* Brand */}
+      <div className="px-5 pt-6 pb-5" style={{ borderBottom: '1px solid var(--hairline)' }}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-brand-500 via-cyan-400 to-emerald-400 p-[1px] shadow-[0_0_30px_rgba(99,102,241,0.35)]">
-              <div className="flex h-full w-full items-center justify-center rounded-2xl bg-slate-950">
-                <Car className="w-4 h-4 text-white" />
-              </div>
+            <div
+              className="w-8 h-8 flex items-center justify-center flex-shrink-0"
+              style={{
+                background: 'var(--ink)',
+                color: 'var(--card)',
+                borderRadius: 3,
+                border: '1px solid var(--hairline-2)',
+              }}
+            >
+              <span className="serif" style={{ fontSize: 16, lineHeight: 1 }}>A</span>
             </div>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300/70">ALM Tracker</div>
-              <div className="text-sm font-semibold text-white leading-none">Inventory Intelligence</div>
+              <div className="eyebrow" style={{ lineHeight: 1.5 }}>ALM · Tracker</div>
+              <div className="serif" style={{ fontSize: 20, color: 'var(--ink)', lineHeight: 1 }}>
+                Concierge
+              </div>
             </div>
           </div>
           {mobile && (
@@ -88,63 +111,84 @@ export default function Sidebar({ mobile = false, open = false, onClose }: Sideb
         </div>
       </div>
 
-      <div className="relative border-b border-slate-800 px-3 py-3" ref={pickerRef}>
+      {/* Location picker */}
+      <div className="px-4 py-3 relative" style={{ borderBottom: '1px solid var(--hairline)' }} ref={pickerRef}>
         <button
           onClick={() => setShowPicker(p => !p)}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700
-                     hover:border-slate-600 text-left transition-colors group"
+          className="w-full flex items-start gap-2 px-3 py-2.5 text-left t"
+          style={{ borderRadius: 4, border: '1px solid var(--hairline)', background: 'var(--bg-2)' }}
         >
-          <MapPin className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
+          <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: 'var(--accent)' }} />
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-medium text-white truncate">
+            <div className="text-xs font-semibold truncate" style={{ color: 'var(--ink)' }}>
               {selectedDealer ? selectedDealer.name : 'All Locations'}
             </div>
-            <div className="text-[10px] text-slate-500 mt-0.5">
+            <div className="mt-0.5 truncate" style={{ fontSize: 10.5, color: 'var(--muted)' }}>
               {selectedDealer
-                ? `${selectedDealer.active_vehicle_count} vehicles`
-                : `${dealers.length} locations · ${totalVehicles} vehicles`}
+                ? `${selectedDealer.active_vehicle_count} vehicles · ${selectedDealer.city}`
+                : `${dealers.length} locations · ${totalVehicles.toLocaleString()} vehicles`}
             </div>
           </div>
-          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 flex-shrink-0 transition-transform ${showPicker ? 'rotate-180' : ''}`} />
+          <ChevronDown
+            className={`w-3.5 h-3.5 flex-shrink-0 t ${showPicker ? 'rotate-180' : ''}`}
+            style={{ color: 'var(--muted)' }}
+          />
         </button>
 
         {showPicker && (
-          <div className="absolute left-3 right-3 mt-1 z-50 overflow-hidden rounded-xl border border-slate-700 bg-slate-800 shadow-xl" style={{ width: '13.5rem' }}>
+          <div
+            className="absolute left-4 right-4 z-50 overflow-y-auto no-scrollbar"
+            style={{
+              top: '100%',
+              marginTop: 4,
+              border: '1px solid var(--hairline)',
+              borderRadius: 4,
+              background: 'var(--card)',
+              boxShadow: '0 20px 60px oklch(0 0 0 / 0.12)',
+              maxHeight: 320,
+            }}
+          >
             <button
               onClick={() => { setSelectedDealer(null); setShowPicker(false) }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700 transition-colors text-left"
+              className="w-full flex items-center justify-between px-3 py-2.5 text-left t"
+              style={{ background: !selectedDealer ? 'var(--bg-2)' : undefined }}
             >
-              <div className="w-5 h-5 rounded-full bg-brand-600/20 flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-3 h-3 text-brand-400" />
+              <div>
+                <div className="text-xs font-medium" style={{ color: 'var(--ink)' }}>All Locations</div>
+                <div style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 2 }}>
+                  {dealers.length} lots · {totalVehicles.toLocaleString()} units
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-white">All Locations</div>
-                <div className="text-[10px] text-slate-500">{dealers.length} dealers · {totalVehicles} vehicles</div>
-              </div>
-              {!selectedDealer && <Check className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />}
+              {!selectedDealer && <Check className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />}
             </button>
-
-            <div className="border-t border-slate-700/50 max-h-72 overflow-y-auto">
-              {dealers.map(dealer => (
-                <button
-                  key={dealer.id}
-                  onClick={() => { setSelectedDealer(dealer); setShowPicker(false) }}
-                  className="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-700 transition-colors text-left"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-slate-200 truncate">{dealer.name}</div>
-                    <div className="text-[10px] text-slate-500">{dealer.city} · {dealer.active_vehicle_count} vehicles</div>
+            <div style={{ borderTop: '1px solid var(--hairline)' }} />
+            {dealers.map(dealer => (
+              <button
+                key={dealer.id}
+                onClick={() => { setSelectedDealer(dealer); setShowPicker(false) }}
+                className="w-full flex items-center justify-between px-3 py-2 text-left t row-hover"
+                style={{ background: selectedDealer?.id === dealer.id ? 'var(--bg-2)' : undefined }}
+              >
+                <div className="min-w-0">
+                  <div className="text-xs font-medium truncate" style={{ color: 'var(--ink)' }}>
+                    {dealer.name}
                   </div>
-                  {selectedDealer?.id === dealer.id && <Check className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />}
-                </button>
-              ))}
-            </div>
+                  <div className="truncate" style={{ fontSize: 10.5, color: 'var(--muted)', marginTop: 2 }}>
+                    {dealer.city} · {dealer.active_vehicle_count}
+                  </div>
+                </div>
+                {selectedDealer?.id === dealer.id && (
+                  <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--accent)' }} />
+                )}
+              </button>
+            ))}
           </div>
         )}
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {links.map(({ to, icon: Icon, label }) => (
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-3 overflow-y-auto no-scrollbar space-y-0.5">
+        {NAV_LINKS.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -157,17 +201,22 @@ export default function Sidebar({ mobile = false, open = false, onClose }: Sideb
         ))}
       </nav>
 
-      <div className="px-3 py-4 border-t border-slate-800">
+      {/* Refresh + theme toggle */}
+      <div className="px-3 py-3" style={{ borderTop: '1px solid var(--hairline)' }}>
         <button
           onClick={handleScrape}
           disabled={scraping}
-          className="w-full flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800/90
-                     py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white disabled:opacity-50"
+          className="w-full btn justify-center"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${scraping ? 'animate-spin' : ''}`} />
-          {scraping ? 'Scraping...' : 'Refresh Now'}
+          {scraping ? 'Scraping...' : 'Refresh now'}
         </button>
-        <p className="text-center text-[11px] text-slate-600 mt-2">Auto-refreshes every 6h</p>
+        <div className="mt-2 flex items-center justify-between px-1">
+          <span className="mono" style={{ fontSize: 10.5, color: 'var(--muted)' }}>Auto · every 6h</span>
+          <button onClick={handleToggleTheme} className="btn-ghost p-1.5" title="Toggle theme">
+            {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -177,12 +226,13 @@ export default function Sidebar({ mobile = false, open = false, onClose }: Sideb
       <>
         <div
           onClick={onClose}
-          className={`fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm transition-opacity duration-200 ${
+          className={`fixed inset-0 z-40 transition-opacity duration-200 ${
             open ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
+          style={{ background: 'oklch(0 0 0 / 0.45)' }}
         />
         <aside
-          className={`fixed inset-y-0 left-0 z-50 w-[18rem] max-w-[85vw] transform transition-transform duration-300 ease-out ${
+          className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-out ${
             open ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -193,7 +243,7 @@ export default function Sidebar({ mobile = false, open = false, onClose }: Sideb
   }
 
   return (
-    <aside className="hidden h-full w-72 flex-shrink-0 lg:block">
+    <aside className="hidden h-screen flex-shrink-0 sticky top-0 lg:flex">
       {sidebarContent}
     </aside>
   )
