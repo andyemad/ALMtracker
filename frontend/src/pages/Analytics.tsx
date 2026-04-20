@@ -238,13 +238,13 @@ export default function Analytics() {
             {selectedMake && (
               <button
                 onClick={() => setSelectedMake(null)}
-                className="text-[10px] font-semibold text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1"
+                className="text-[10px] font-semibold text-[color:var(--muted)] hover:text-[color:var(--ink-2)] transition-colors flex items-center gap-1"
               >
                 ✕ clear
               </button>
             )}
           </div>
-          <p className="text-xs text-slate-500 mb-4">
+          <p className="text-xs text-[color:var(--muted)] mb-4">
             {selectedMake ? `Showing models for ${selectedMake} — click another bar or clear` : '% of all sold vehicles · click a bar to see models'}
           </p>
           <div className="h-72">
@@ -276,19 +276,19 @@ export default function Analytics() {
                 className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
                   selectedMake === m.make
                     ? 'border-brand-500/50 bg-brand-500/20 &'
-                    : 'border-slate-700/50 bg-slate-800/40 text-slate-400 hover:& hover:border-slate-600'
+                    : 'border-[color:var(--hairline-2)] bg-[color:var(--bg-2)] text-[color:var(--muted)] hover:& hover:border-slate-600'
                 }`}
               >
                 <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: BRAND_COLORS[i % BRAND_COLORS.length] }} />
                 {m.make}
-                <span className="text-slate-600">{m.count}</span>
+                <span className="text-[color:var(--muted)]">{m.count}</span>
               </button>
             ))}
           </div>
 
           {/* Model drilldown — expands when a make is selected */}
           {selectedMake && make_model_breakdown?.[selectedMake] && make_model_breakdown[selectedMake].length > 0 && (
-            <div className="mt-3 border-t border-slate-800 pt-3">
+            <div className="mt-3 border-t border-[color:var(--hairline)] pt-3">
               <p className="text-xs font-bold & mb-2">
                 {selectedMake} — top models sold
               </p>
@@ -299,11 +299,11 @@ export default function Analytics() {
                   return (
                     <div
                       key={m.model}
-                      className="flex items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-800/60 px-3 py-2 text-xs"
+                      className="flex items-center gap-2 rounded-lg border border-[color:var(--hairline-2)] bg-[color:var(--bg-2)] px-3 py-2 text-xs"
                     >
                       <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: color }} />
                       <span className="font-bold &">{m.model}</span>
-                      <span className="text-slate-400">{m.count} sold</span>
+                      <span className="text-[color:var(--muted)]">{m.count} sold</span>
                     </div>
                   )
                 })}
@@ -315,7 +315,7 @@ export default function Analytics() {
         {/* Body Style donut */}
         <div className="card p-5">
           <h2 className="text-sm font-bold & mb-1">Body Style Mix</h2>
-          <p className="text-xs text-slate-500 mb-4">sold vehicles by type</p>
+          <p className="text-xs text-[color:var(--muted)] mb-4">sold vehicles by type</p>
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -334,7 +334,7 @@ export default function Analytics() {
               <div key={b.body_style} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: BRAND_COLORS[i % BRAND_COLORS.length] }} />
-                  <span className="text-slate-400">{b.body_style}</span>
+                  <span className="text-[color:var(--muted)]">{b.body_style}</span>
                 </div>
                 <span className="font-semibold &">{b.pct}%</span>
               </div>
@@ -349,17 +349,17 @@ export default function Analytics() {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div>
               <h2 className="text-sm font-bold &">Best Selling Model Years</h2>
-              <p className="text-xs text-slate-500 mt-0.5">volume by vehicle model year — newer years reflect franchise new-car sales</p>
+              <p className="text-xs text-[color:var(--muted)] mt-0.5">volume by vehicle model year — newer years reflect franchise new-car sales</p>
             </div>
             <div className="flex items-center gap-3 text-xs">
-              <span className="flex items-center gap-1.5 text-slate-500">
+              <span className="flex items-center gap-1.5 text-[color:var(--muted)]">
                 <span className="h-2 w-2 rounded-sm bg-brand-500" />New inventory
               </span>
-              <span className="flex items-center gap-1.5 text-slate-500">
+              <span className="flex items-center gap-1.5 text-[color:var(--muted)]">
                 <span className="h-2 w-2 rounded-sm bg-cyan-500" />Recent used
               </span>
-              <span className="flex items-center gap-1.5 text-slate-500">
-                <span className="h-2 w-2 rounded-sm bg-slate-600" />Older
+              <span className="flex items-center gap-1.5 text-[color:var(--muted)]">
+                <span className="h-2 w-2 rounded-sm bg-[color:var(--muted)]" />Older
               </span>
             </div>
           </div>
@@ -388,11 +388,11 @@ export default function Analytics() {
           <div className="mt-3 flex flex-wrap gap-2">
             {[...top_years].sort((a, b) => b.year - a.year).map((y) => (
               <div key={y.year}
-                className="flex items-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-800/40 px-2.5 py-1 text-xs">
+                className="flex items-center gap-1.5 rounded-lg border border-[color:var(--hairline-2)] bg-[color:var(--bg-2)] px-2.5 py-1 text-xs">
                 <span className="font-bold &">{y.year}</span>
-                <span className="text-slate-400">{y.count} sold</span>
-                <span className="text-slate-600">·</span>
-                <span className="text-slate-500">{y.pct}%</span>
+                <span className="text-[color:var(--muted)]">{y.count} sold</span>
+                <span className="text-[color:var(--muted)]">·</span>
+                <span className="text-[color:var(--muted)]">{y.pct}%</span>
               </div>
             ))}
           </div>
@@ -405,7 +405,7 @@ export default function Analytics() {
         {/* Weekly trend line */}
         <div className="card p-5">
           <h2 className="text-sm font-bold & mb-1">Weekly Sales Trend</h2>
-          <p className="text-xs text-slate-500 mb-4">vehicles leaving the lot per week</p>
+          <p className="text-xs text-[color:var(--muted)] mb-4">vehicles leaving the lot per week</p>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={weekly_trend} margin={{ left: 0, right: 12 }}>
@@ -424,7 +424,7 @@ export default function Analytics() {
         {/* Price distribution */}
         <div className="card p-5">
           <h2 className="text-sm font-bold & mb-1">Price Distribution</h2>
-          <p className="text-xs text-slate-500 mb-4">% of sold vehicles by price range</p>
+          <p className="text-xs text-[color:var(--muted)] mb-4">% of sold vehicles by price range</p>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={price_buckets} margin={{ left: 0, right: 12 }}>
@@ -446,17 +446,17 @@ export default function Analytics() {
       {/* Top colors */}
       <div className="card p-5">
         <h2 className="text-sm font-bold & mb-1">Top Exterior Colors</h2>
-        <p className="text-xs text-slate-500 mb-4">most popular colors among sold vehicles</p>
+        <p className="text-xs text-[color:var(--muted)] mb-4">most popular colors among sold vehicles</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           {top_colors.slice(0, 10).map((c) => (
-            <div key={c.color} className="flex items-center gap-2.5 rounded-xl border border-slate-700/50 bg-slate-800/40 px-3 py-2">
+            <div key={c.color} className="flex items-center gap-2.5 rounded-xl border border-[color:var(--hairline-2)] bg-[color:var(--bg-2)] px-3 py-2">
               <span
-                className="h-7 w-7 rounded-lg flex-shrink-0 border border-slate-700/60"
+                className="h-7 w-7 rounded-lg flex-shrink-0 border border-[color:var(--hairline-2)]"
                 style={{ background: guessColorHex(c.color) }}
               />
               <div className="min-w-0">
-                <p className="text-xs font-medium text-slate-200 truncate">{c.color}</p>
-                <p className="text-[10px] text-slate-500">{c.count} sold · {c.pct}%</p>
+                <p className="text-xs font-medium text-[color:var(--ink)] truncate">{c.color}</p>
+                <p className="text-[10px] text-[color:var(--muted)]">{c.count} sold · {c.pct}%</p>
               </div>
             </div>
           ))}
@@ -466,15 +466,15 @@ export default function Analytics() {
       {/* Top Models table */}
       <div className="card p-5">
         <h2 className="text-sm font-bold & mb-1">Top Selling Models</h2>
-        <p className="text-xs text-slate-500 mb-4">click any row to see year breakdown</p>
+        <p className="text-xs text-[color:var(--muted)] mb-4">click any row to see year breakdown</p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-slate-800">
-                <th className="pb-2 text-left font-semibold text-slate-500 w-8">#</th>
-                <th className="pb-2 text-left font-semibold text-slate-500">Model</th>
-                <th className="pb-2 text-right font-semibold text-slate-500">Units</th>
-                <th className="pb-2 text-right font-semibold text-slate-500">Avg Price</th>
+              <tr className="border-b border-[color:var(--hairline)]">
+                <th className="pb-2 text-left font-semibold text-[color:var(--muted)] w-8">#</th>
+                <th className="pb-2 text-left font-semibold text-[color:var(--muted)]">Model</th>
+                <th className="pb-2 text-right font-semibold text-[color:var(--muted)]">Units</th>
+                <th className="pb-2 text-right font-semibold text-[color:var(--muted)]">Avg Price</th>
                 <th className="pb-2 w-6" />
               </tr>
             </thead>
@@ -487,29 +487,29 @@ export default function Analytics() {
                   <React.Fragment key={modelKey}>
                     <tr
                       onClick={() => setSelectedModel(prev => prev === modelKey ? null : modelKey)}
-                      className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                      className="border-b border-[color:var(--hairline)] hover:bg-[color:var(--bg-2)] transition-colors cursor-pointer"
                     >
-                      <td className="py-2.5 text-slate-600 font-mono">{i + 1}</td>
+                      <td className="py-2.5 text-[color:var(--muted)] font-mono">{i + 1}</td>
                       <td className="py-2.5">
                         <span className="font-semibold &">{m.make} {m.model}</span>
                       </td>
                       <td className="py-2.5 text-right">
-                        <span className="font-bold text-cyan-400">{m.count}</span>
+                        <span className="font-bold text-[color:var(--accent)]">{m.count}</span>
                       </td>
-                      <td className="py-2.5 text-right text-slate-300">{m.avg_price ? fmtFull$(m.avg_price) : '—'}</td>
-                      <td className="py-2.5 text-right text-slate-600">
+                      <td className="py-2.5 text-right text-[color:var(--ink-2)]">{m.avg_price ? fmtFull$(m.avg_price) : '—'}</td>
+                      <td className="py-2.5 text-right text-[color:var(--muted)]">
                         <span className={`inline-block transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
                       </td>
                     </tr>
                     {isOpen && years && years.length > 0 && (
-                      <tr className="border-b border-slate-800/50 bg-slate-800/20">
+                      <tr className="border-b border-[color:var(--hairline)] bg-[color:var(--bg-2)]">
                         <td />
                         <td colSpan={4} className="py-2.5 pr-2">
                           <div className="flex flex-wrap gap-2">
                             {years.map((y: { year: number; count: number }) => (
-                              <div key={y.year} className="flex items-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 px-2.5 py-1 text-xs">
+                              <div key={y.year} className="flex items-center gap-1.5 rounded-lg border border-[color:var(--hairline-2)] bg-[color:var(--card)] px-2.5 py-1 text-xs">
                                 <span className="font-bold &">{y.year}</span>
-                                <span className="text-slate-400">{y.count} sold</span>
+                                <span className="text-[color:var(--muted)]">{y.count} sold</span>
                               </div>
                             ))}
                           </div>
@@ -528,17 +528,17 @@ export default function Analytics() {
       {!selectedDealer && location_performance.length > 0 && (
         <div className="card p-5">
           <h2 className="text-sm font-bold & mb-1">Location Performance</h2>
-          <p className="text-xs text-slate-500 mb-4">all 24 ALM locations ranked by sold volume</p>
+          <p className="text-xs text-[color:var(--muted)] mb-4">all 24 ALM locations ranked by sold volume</p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-800">
-                  <th className="pb-2 text-left font-semibold text-slate-500">Location</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500">Sold</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500">% Share</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500 hidden sm:table-cell">Avg Price</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500 hidden sm:table-cell">Avg Days</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500 hidden md:table-cell">Top Make</th>
+                <tr className="border-b border-[color:var(--hairline)]">
+                  <th className="pb-2 text-left font-semibold text-[color:var(--muted)]">Location</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)]">Sold</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)]">% Share</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)] hidden sm:table-cell">Avg Price</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)] hidden sm:table-cell">Avg Days</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)] hidden md:table-cell">Top Make</th>
                 </tr>
               </thead>
               <tbody>
@@ -546,32 +546,32 @@ export default function Analytics() {
                   const isMog = loc.dealer_id === MOG_DEALER_ID
                   return (
                     <tr key={loc.dealer_id}
-                      className={`border-b border-slate-800/50 transition-colors ${isMog ? 'bg-brand-900/20' : 'hover:bg-slate-800/30'}`}>
+                      className={`border-b border-[color:var(--hairline)] transition-colors ${isMog ? 'bg-brand-900/20' : 'hover:bg-[color:var(--bg-2)]'}`}>
                       <td className="py-2.5">
                         <div className="flex items-center gap-2">
                           {isMog && <span className="h-1.5 w-1.5 rounded-full bg-brand-400 flex-shrink-0" />}
-                          <span className={`font-medium ${isMog ? 'text-brand-300' : 'text-slate-200'}`}>{loc.name}</span>
+                          <span className={`font-medium ${isMog ? 'text-brand-300' : 'text-[color:var(--ink)]'}`}>{loc.name}</span>
                           {isMog && <span className="text-[10px] font-bold text-brand-400 bg-brand-500/20 rounded px-1.5 py-0.5">MOG</span>}
                         </div>
                       </td>
                       <td className="py-2.5 text-right">
-                        <span className={`font-bold ${isMog ? 'text-brand-300' : 'text-cyan-400'}`}>{loc.sold}</span>
+                        <span className={`font-bold ${isMog ? 'text-brand-300' : 'text-[color:var(--accent)]'}`}>{loc.sold}</span>
                       </td>
                       <td className="py-2.5 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <div className="hidden sm:block w-16 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                          <div className="hidden sm:block w-16 h-1.5 rounded-full bg-[color:var(--bg-2)] overflow-hidden">
                             <div className="h-full rounded-full" style={{ width: `${Math.min(loc.pct * 3, 100)}%`, background: isMog ? '#6366f1' : '#22d3ee' }} />
                           </div>
-                          <span className="text-slate-400">{loc.pct}%</span>
+                          <span className="text-[color:var(--muted)]">{loc.pct}%</span>
                         </div>
                       </td>
-                      <td className="py-2.5 text-right text-slate-400 hidden sm:table-cell">{loc.avg_price ? fmtFull$(loc.avg_price) : '—'}</td>
+                      <td className="py-2.5 text-right text-[color:var(--muted)] hidden sm:table-cell">{loc.avg_price ? fmtFull$(loc.avg_price) : '—'}</td>
                       <td className="py-2.5 text-right hidden sm:table-cell">
-                        <span className={loc.avg_days <= 10 ? 'text-emerald-400' : loc.avg_days <= 20 ? 'text-amber-400' : 'text-red-400'}>
+                        <span className={loc.avg_days <= 10 ? 'text-[color:var(--positive)]' : loc.avg_days <= 20 ? 'text-[color:var(--warn)]' : 'text-[color:var(--danger)]'}>
                           {loc.avg_days}d
                         </span>
                       </td>
-                      <td className="py-2.5 text-right text-slate-400 hidden md:table-cell">{loc.top_make || '—'}</td>
+                      <td className="py-2.5 text-right text-[color:var(--muted)] hidden md:table-cell">{loc.top_make || '—'}</td>
                     </tr>
                   )
                 })}
@@ -590,7 +590,7 @@ export default function Analytics() {
               {branded_location_split.length} Branded Dealers
             </span>
           </div>
-          <p className="text-xs text-slate-500 mb-5">OEM franchise stores only · used-only lots excluded · sorted by total volume</p>
+          <p className="text-xs text-[color:var(--muted)] mb-5">OEM franchise stores only · used-only lots excluded · sorted by total volume</p>
 
           {/* Stacked bar chart */}
           <div className="h-72">
@@ -616,27 +616,27 @@ export default function Analytics() {
                     if (!active || !payload?.length) return null
                     const d = branded_location_split.find(x => x.name === label)
                     return (
-                      <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 shadow-xl text-xs min-w-[180px]">
+                      <div className="rounded-xl border border-[color:var(--hairline-2)] bg-[color:var(--card)] px-3 py-2.5 shadow-xl text-xs min-w-[180px]">
                         <p className="font-bold & mb-2 text-[11px]">{label}</p>
                         <div className="space-y-1">
                           <div className="flex justify-between gap-4">
-                            <span className="text-emerald-400">New</span>
-                            <span className="font-bold &">{d?.new} <span className="text-slate-500 font-normal">({d?.new_pct}%)</span></span>
+                            <span className="text-[color:var(--positive)]">New</span>
+                            <span className="font-bold &">{d?.new} <span className="text-[color:var(--muted)] font-normal">({d?.new_pct}%)</span></span>
                           </div>
                           <div className="flex justify-between gap-4">
-                            <span className="text-cyan-400">Used</span>
-                            <span className="font-bold &">{d?.used} <span className="text-slate-500 font-normal">({d?.used_pct}%)</span></span>
+                            <span className="text-[color:var(--accent)]">Used</span>
+                            <span className="font-bold &">{d?.used} <span className="text-[color:var(--muted)] font-normal">({d?.used_pct}%)</span></span>
                           </div>
                           {d?.avg_new_price ? (
-                            <div className="flex justify-between gap-4 pt-1 border-t border-slate-800 mt-1">
-                              <span className="text-slate-500">Avg New</span>
-                              <span className="text-slate-300">${d.avg_new_price.toLocaleString()}</span>
+                            <div className="flex justify-between gap-4 pt-1 border-t border-[color:var(--hairline)] mt-1">
+                              <span className="text-[color:var(--muted)]">Avg New</span>
+                              <span className="text-[color:var(--ink-2)]">${d.avg_new_price.toLocaleString()}</span>
                             </div>
                           ) : null}
                           {d?.avg_used_price ? (
                             <div className="flex justify-between gap-4">
-                              <span className="text-slate-500">Avg Used</span>
-                              <span className="text-slate-300">${d.avg_used_price.toLocaleString()}</span>
+                              <span className="text-[color:var(--muted)]">Avg Used</span>
+                              <span className="text-[color:var(--ink-2)]">${d.avg_used_price.toLocaleString()}</span>
                             </div>
                           ) : null}
                         </div>
@@ -648,7 +648,7 @@ export default function Analytics() {
                 <Legend
                   iconType="square"
                   iconSize={8}
-                  formatter={(v) => <span className="text-xs text-slate-400 capitalize">{v}</span>}
+                  formatter={(v) => <span className="text-xs text-[color:var(--muted)] capitalize">{v}</span>}
                   wrapperStyle={{ paddingTop: 8 }}
                 />
                 <Bar dataKey="new" name="New" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
@@ -661,35 +661,35 @@ export default function Analytics() {
           <div className="mt-5 overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-800">
-                  <th className="pb-2 text-left font-semibold text-slate-500">Location</th>
-                  <th className="pb-2 text-right font-semibold text-emerald-500">New</th>
+                <tr className="border-b border-[color:var(--hairline)]">
+                  <th className="pb-2 text-left font-semibold text-[color:var(--muted)]">Location</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--positive)]">New</th>
                   <th className="pb-2 text-right font-semibold text-brand-400">Used</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500">Total</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500 hidden sm:table-cell">Avg New $</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500 hidden sm:table-cell">Avg Used $</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500">New %</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)]">Total</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)] hidden sm:table-cell">Avg New $</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)] hidden sm:table-cell">Avg Used $</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)]">New %</th>
                 </tr>
               </thead>
               <tbody>
                 {branded_location_split.map((loc) => (
-                  <tr key={loc.dealer_id} className="border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors">
-                    <td className="py-2 font-medium text-slate-200">{loc.name}</td>
-                    <td className="py-2 text-right font-bold text-emerald-400">{loc.new}</td>
+                  <tr key={loc.dealer_id} className="border-b border-[color:var(--hairline)] hover:bg-[color:var(--bg-2)] transition-colors">
+                    <td className="py-2 font-medium text-[color:var(--ink)]">{loc.name}</td>
+                    <td className="py-2 text-right font-bold text-[color:var(--positive)]">{loc.new}</td>
                     <td className="py-2 text-right font-bold text-brand-400">{loc.used}</td>
-                    <td className="py-2 text-right text-slate-300">{loc.total}</td>
-                    <td className="py-2 text-right text-slate-400 hidden sm:table-cell">
+                    <td className="py-2 text-right text-[color:var(--ink-2)]">{loc.total}</td>
+                    <td className="py-2 text-right text-[color:var(--muted)] hidden sm:table-cell">
                       {loc.avg_new_price ? `$${loc.avg_new_price.toLocaleString()}` : '—'}
                     </td>
-                    <td className="py-2 text-right text-slate-400 hidden sm:table-cell">
+                    <td className="py-2 text-right text-[color:var(--muted)] hidden sm:table-cell">
                       {loc.avg_used_price ? `$${loc.avg_used_price.toLocaleString()}` : '—'}
                     </td>
                     <td className="py-2 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <div className="hidden sm:block w-14 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                        <div className="hidden sm:block w-14 h-1.5 rounded-full bg-[color:var(--bg-2)] overflow-hidden">
                           <div className="h-full rounded-full bg-emerald-500" style={{ width: `${loc.new_pct}%` }} />
                         </div>
-                        <span className="text-emerald-400 font-semibold">{loc.new_pct}%</span>
+                        <span className="text-[color:var(--positive)] font-semibold">{loc.new_pct}%</span>
                       </div>
                     </td>
                   </tr>
@@ -705,10 +705,10 @@ export default function Analytics() {
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
           <div>
             <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <AlertTriangle className="w-4 h-4 text-[color:var(--warn)]" />
               <h2 className="text-sm font-bold &">Cars to Move</h2>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">active units aging past their make's avg · needs attention</p>
+            <p className="text-xs text-[color:var(--muted)] mt-0.5">active units aging past their make's avg · needs attention</p>
           </div>
           <div className="flex items-center gap-1.5">
             {(['all', 'critical', 'high', 'medium'] as const).map(f => (
@@ -718,7 +718,7 @@ export default function Analytics() {
                 className={`rounded-lg border px-2.5 py-1 text-xs font-semibold capitalize transition-colors ${
                   urgencyFilter === f
                     ? 'border-brand-500/50 bg-brand-500/20 text-brand-300'
-                    : 'border-slate-700 bg-slate-800/60 text-slate-400 hover:text-slate-200'
+                    : 'border-[color:var(--hairline-2)] bg-[color:var(--bg-2)] text-[color:var(--muted)] hover:text-[color:var(--ink)]'
                 }`}
               >
                 {f === 'all' ? `All (${cars_to_move.length})` : f}
@@ -728,41 +728,41 @@ export default function Analytics() {
         </div>
 
         {filteredCarsToMove.length === 0 ? (
-          <p className="text-sm text-slate-500 py-4 text-center">No vehicles in this urgency tier.</p>
+          <p className="text-sm text-[color:var(--muted)] py-4 text-center">No vehicles in this urgency tier.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-800">
-                  <th className="pb-2 text-left font-semibold text-slate-500">Vehicle</th>
-                  <th className="pb-2 text-left font-semibold text-slate-500 hidden sm:table-cell">Location</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500">Days on Lot</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500 hidden sm:table-cell">Make Avg</th>
-                  <th className="pb-2 text-right font-semibold text-slate-500">Price</th>
-                  <th className="pb-2 text-center font-semibold text-slate-500">Urgency</th>
+                <tr className="border-b border-[color:var(--hairline)]">
+                  <th className="pb-2 text-left font-semibold text-[color:var(--muted)]">Vehicle</th>
+                  <th className="pb-2 text-left font-semibold text-[color:var(--muted)] hidden sm:table-cell">Location</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)]">Days on Lot</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)] hidden sm:table-cell">Make Avg</th>
+                  <th className="pb-2 text-right font-semibold text-[color:var(--muted)]">Price</th>
+                  <th className="pb-2 text-center font-semibold text-[color:var(--muted)]">Urgency</th>
                   <th className="pb-2 w-8" />
                 </tr>
               </thead>
               <tbody>
                 {filteredCarsToMove.map((c) => (
-                  <tr key={c.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
+                  <tr key={c.id} className="border-b border-[color:var(--hairline)] hover:bg-[color:var(--bg-2)] transition-colors">
                     <td className="py-2.5">
                       <p className="font-semibold &">{c.year} {c.make} {c.model}</p>
-                      <p className="text-slate-500">{c.stock_number} · {c.exterior_color}</p>
+                      <p className="text-[color:var(--muted)]">{c.stock_number} · {c.exterior_color}</p>
                     </td>
-                    <td className="py-2.5 text-slate-400 hidden sm:table-cell">
+                    <td className="py-2.5 text-[color:var(--muted)] hidden sm:table-cell">
                       {c.location_name || '—'}
                       {c.dealer_id === MOG_DEALER_ID && (
                         <span className="ml-1.5 text-[10px] font-bold text-brand-400 bg-brand-500/20 rounded px-1 py-0.5">MOG</span>
                       )}
                     </td>
                     <td className="py-2.5 text-right">
-                      <span className={`font-bold text-sm ${c.urgency === 'critical' ? 'text-red-400' : c.urgency === 'high' ? 'text-orange-400' : 'text-amber-400'}`}>
+                      <span className={`font-bold text-sm ${c.urgency === 'critical' ? 'text-[color:var(--danger)]' : c.urgency === 'high' ? 'text-[color:var(--warn)]' : 'text-[color:var(--warn)]'}`}>
                         {c.days_on_lot}d
                       </span>
                     </td>
-                    <td className="py-2.5 text-right text-slate-500 hidden sm:table-cell">{c.category_avg}d avg</td>
-                    <td className="py-2.5 text-right text-slate-300">
+                    <td className="py-2.5 text-right text-[color:var(--muted)] hidden sm:table-cell">{c.category_avg}d avg</td>
+                    <td className="py-2.5 text-right text-[color:var(--ink-2)]">
                       {c.price ? fmtFull$(c.price) : '—'}
                     </td>
                     <td className="py-2.5 text-center">
@@ -771,7 +771,7 @@ export default function Analytics() {
                     <td className="py-2.5 text-right">
                       {c.listing_url && (
                         <a href={c.listing_url} target="_blank" rel="noreferrer"
-                          className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-500 hover:text-brand-400 hover:bg-slate-700/50 transition-colors">
+                          className="inline-flex items-center justify-center rounded-lg p-1.5 text-[color:var(--muted)] hover:text-brand-400 hover:bg-[color:var(--hairline)] transition-colors">
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                       )}
