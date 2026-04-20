@@ -28,11 +28,11 @@ const SUFFIX_COLORS: Record<string, string> = {
 function StockCell({ stock }: { stock: string }) {
   const last = stock.slice(-1).toUpperCase()
   const suffix = SUFFIX_COLORS[last]
-  if (!suffix) return <span className="font-mono text-xs text-slate-400">{stock}</span>
+  if (!suffix) return <span className="font-mono text-xs text-[color:var(--muted)]">{stock}</span>
   const base = stock.slice(0, -1)
   return (
     <span className="flex items-center gap-1">
-      <span className="font-mono text-xs text-slate-400">{base}</span>
+      <span className="font-mono text-xs text-[color:var(--muted)]">{base}</span>
       <span className={`font-mono text-[10px] font-bold px-1 py-0.5 rounded border ${suffix}`}>{last}</span>
     </span>
   )
@@ -146,45 +146,45 @@ export default function TradeIns() {
       accessorKey: 'year',
       header: 'Year',
       size: 70,
-      cell: ({ getValue }) => <span className="font-semibold text-white">{getValue() as number}</span>,
+      cell: ({ getValue }) => <span className="font-semibold text-[color:var(--ink)]">{getValue() as number}</span>,
     },
     {
       accessorKey: 'make',
       header: 'Make',
       size: 110,
-      cell: ({ getValue }) => <span className="text-slate-200">{getValue() as string}</span>,
+      cell: ({ getValue }) => <span className="text-[color:var(--ink)]">{getValue() as string}</span>,
     },
     {
       accessorKey: 'model',
       header: 'Model',
       size: 130,
-      cell: ({ getValue }) => <span className="text-slate-200">{getValue() as string}</span>,
+      cell: ({ getValue }) => <span className="text-[color:var(--ink)]">{getValue() as string}</span>,
     },
     {
       accessorKey: 'trim',
       header: 'Trim',
       size: 120,
-      cell: ({ getValue }) => <span className="text-slate-400 text-xs">{getValue() as string || '—'}</span>,
+      cell: ({ getValue }) => <span className="text-[color:var(--muted)] text-xs">{getValue() as string || '—'}</span>,
     },
     {
       accessorKey: 'price',
       header: 'Price',
       size: 100,
       cell: ({ getValue }) => (
-        <span className="font-semibold text-white">{fmt$(getValue() as number | null)}</span>
+        <span className="font-semibold text-[color:var(--ink)]">{fmt$(getValue() as number | null)}</span>
       ),
     },
     {
       accessorKey: 'mileage',
       header: 'Mileage',
       size: 100,
-      cell: ({ getValue }) => <span className="text-slate-300">{fmtMi(getValue() as number | null)}</span>,
+      cell: ({ getValue }) => <span className="text-[color:var(--ink-2)]">{fmtMi(getValue() as number | null)}</span>,
     },
     {
       accessorKey: 'exterior_color',
       header: 'Color',
       size: 100,
-      cell: ({ getValue }) => <span className="text-slate-400">{getValue() as string || '—'}</span>,
+      cell: ({ getValue }) => <span className="text-[color:var(--muted)]">{getValue() as string || '—'}</span>,
     },
     {
       accessorKey: 'days_on_lot',
@@ -193,7 +193,7 @@ export default function TradeIns() {
       cell: ({ getValue }) => {
         const d = getValue() as number
         return (
-          <span className={d > 60 ? 'text-red-400' : d > 30 ? 'text-amber-400' : 'text-slate-400'}>
+          <span className={d > 60 ? 'text-[color:var(--danger)]' : d > 30 ? 'text-[color:var(--warn)]' : 'text-[color:var(--muted)]'}>
             {d}
           </span>
         )
@@ -204,7 +204,7 @@ export default function TradeIns() {
       header: 'Taken In',
       size: 110,
       cell: ({ getValue }) => (
-        <span className="text-slate-500 text-xs">
+        <span className="text-[color:var(--muted)] text-xs">
           {formatDistanceToNow(new Date((getValue() as string) + 'Z'), { addSuffix: true })}
         </span>
       ),
@@ -249,13 +249,13 @@ export default function TradeIns() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-800 px-4 py-4 sm:px-6">
+      <div className="flex flex-wrap items-center gap-3 border-b border-[color:var(--hairline)] px-4 py-4 sm:px-6">
         <div>
           <div className="flex items-center gap-2">
-            <ArrowRightLeft className="w-4 h-4 text-amber-400" />
-            <h1 className="text-xl font-bold text-white">Trade-In Inventory</h1>
+            <ArrowRightLeft className="w-4 h-4 text-[color:var(--warn)]" />
+            <h1 className="text-xl font-bold text-[color:var(--ink)]">Trade-In Inventory</h1>
           </div>
-          <p className="text-slate-400 text-xs mt-0.5">
+          <p className="text-[color:var(--muted)] text-xs mt-0.5">
             {total.toLocaleString()} trade-in{total !== 1 ? 's' : ''} — stock numbers ending A/B/C/D/E
           </p>
           <LocationChip className="mt-1" />
@@ -272,7 +272,7 @@ export default function TradeIns() {
 
         {/* Search */}
         <div className="relative ml-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[color:var(--muted)]" />
           <input
             className="input pl-9 w-52"
             placeholder="Search make, model, stock..."
@@ -306,11 +306,11 @@ export default function TradeIns() {
         {/* Filter Toggle */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`btn-secondary relative ${showFilters ? 'bg-slate-600' : ''}`}
+          className={`btn-secondary relative ${showFilters ? 'bg-[color:var(--hairline-2)]' : ''}`}
         >
           Filters
           {activeFiltersCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-brand-600 text-white text-[10px] flex items-center justify-center">
+            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-brand-600 text-[color:var(--ink)] text-[10px] flex items-center justify-center">
               {activeFiltersCount}
             </span>
           )}
@@ -329,7 +329,7 @@ export default function TradeIns() {
 
       {/* Filter Panel */}
       {showFilters && (
-        <div className="px-6 py-4 bg-slate-900/50 border-b border-slate-800 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="px-6 py-4 bg-[color:var(--card)] border-b border-[color:var(--hairline)] grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           <select className="select" value={make} onChange={e => { setMake(e.target.value); resetPage() }}>
             <option value="">All Makes</option>
             {filterOptions?.makes.map(m => <option key={m}>{m}</option>)}
@@ -357,7 +357,7 @@ export default function TradeIns() {
       {/* Table */}
       <div className="flex-1 overflow-auto">
         <table className="w-full">
-          <thead className="sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10">
+          <thead className="sticky top-0 bg-[color:var(--card)] backdrop-blur-sm z-10">
             {table.getHeaderGroups().map(hg => (
               <tr key={hg.id}>
                 {hg.headers.map(h => (
@@ -383,17 +383,17 @@ export default function TradeIns() {
           <tbody>
             {loading ? (
               [...Array(10)].map((_, i) => (
-                <tr key={i} className="border-b border-slate-700/30">
+                <tr key={i} className="border-b border-[color:var(--hairline-2)]">
                   {columns.map((_, j) => (
                     <td key={j} className="table-cell">
-                      <div className="h-4 bg-slate-800 rounded animate-pulse" />
+                      <div className="h-4 bg-[color:var(--bg-2)] rounded animate-pulse" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="text-center py-16 text-slate-500">
+                <td colSpan={columns.length} className="text-center py-16 text-[color:var(--muted)]">
                   No trade-in vehicles found
                 </td>
               </tr>
@@ -413,8 +413,8 @@ export default function TradeIns() {
       </div>
 
       {/* Pagination */}
-      <div className="px-6 py-3 border-t border-slate-800 flex items-center justify-between text-sm">
-        <span className="text-slate-400 text-xs">
+      <div className="px-6 py-3 border-t border-[color:var(--hairline)] flex items-center justify-between text-sm">
+        <span className="text-[color:var(--muted)] text-xs">
           {total.toLocaleString()} total · page {page} of {pages}
         </span>
         <div className="flex items-center gap-1">
@@ -432,7 +432,7 @@ export default function TradeIns() {
                 key={p}
                 onClick={() => setPage(p)}
                 className={`w-7 h-7 rounded text-xs transition-colors ${
-                  p === page ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700'
+                  p === page ? 'bg-brand-600 text-[color:var(--ink)]' : 'text-[color:var(--muted)] hover:text-[color:var(--ink)] hover:bg-[color:var(--hairline)]'
                 }`}
               >
                 {p}

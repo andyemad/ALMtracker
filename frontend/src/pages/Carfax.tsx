@@ -76,15 +76,15 @@ export default function Carfax() {
   return (
     <div className="flex h-full flex-col">
       {/* Search bar */}
-      <div className="border-b border-slate-800 px-4 py-5 sm:px-6">
+      <div className="border-b border-[color:var(--hairline)] px-4 py-5 sm:px-6">
         <form onSubmit={handleSubmit} className="mx-auto max-w-2xl">
-          <h1 className="text-lg font-semibold text-white">CARFAX Lookup</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="text-lg font-semibold text-[color:var(--ink)]">CARFAX Lookup</h1>
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
             Enter a stock number or VIN to pull the CARFAX report.
           </p>
           <div className="mt-4 flex gap-3">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--muted)]" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -109,11 +109,11 @@ export default function Carfax() {
         {result?.status === 'resolved' && resolvedVehicle && result.carfax_url && (
           <div className="mx-auto max-w-2xl">
             <section className="card overflow-hidden">
-              <div className="border-b border-slate-800 bg-emerald-500/10 px-5 py-4">
+              <div className="border-b border-[color:var(--hairline)] bg-emerald-500/10 px-5 py-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">{vehicleLabel(resolvedVehicle)}</h3>
-                    <p className="mt-0.5 text-sm text-slate-300">
+                    <h3 className="text-lg font-semibold text-[color:var(--ink)]">{vehicleLabel(resolvedVehicle)}</h3>
+                    <p className="mt-0.5 text-sm text-[color:var(--ink-2)]">
                       Stock #{resolvedVehicle.stock_number}
                       {resolvedVehicle.location_name ? ` · ${resolvedVehicle.location_name}` : ''}
                       {result.cached && cachedAt ? ` · cached ${cachedAt}` : ''}
@@ -169,15 +169,15 @@ export default function Carfax() {
         {/* Ambiguous matches — rare but handle gracefully */}
         {result?.status === 'ambiguous' && result.matches && (
           <div className="mx-auto max-w-2xl">
-            <p className="mb-4 text-sm text-slate-400">
+            <p className="mb-4 text-sm text-[color:var(--muted)]">
               Multiple vehicles matched — pick one:
             </p>
             <div className="space-y-3">
               {result.matches.map((vehicle) => (
                 <div key={vehicle.id} className="card flex items-center justify-between gap-4 px-5 py-4">
                   <div className="min-w-0">
-                    <p className="font-medium text-white">{vehicleLabel(vehicle)}</p>
-                    <p className="mt-0.5 text-sm text-slate-400">
+                    <p className="font-medium text-[color:var(--ink)]">{vehicleLabel(vehicle)}</p>
+                    <p className="mt-0.5 text-sm text-[color:var(--muted)]">
                       Stock #{vehicle.stock_number}
                       {vehicle.location_name ? ` · ${vehicle.location_name}` : ''}
                     </p>
@@ -202,7 +202,7 @@ export default function Carfax() {
         {!result && !loading && (
           <div className="mx-auto max-w-2xl pt-12 text-center">
             <Search className="mx-auto h-10 w-10 text-slate-700" />
-            <p className="mt-3 text-sm text-slate-500">
+            <p className="mt-3 text-sm text-[color:var(--muted)]">
               Results will appear here after you search.
             </p>
           </div>
@@ -215,9 +215,9 @@ export default function Carfax() {
 
 function Detail({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">{label}</p>
-      <p className={`mt-1 text-sm text-slate-200 ${mono ? 'font-mono break-all text-xs' : ''}`}>{value}</p>
+    <div className="rounded-2xl border border-[color:var(--hairline)] bg-[color:var(--card)] p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">{label}</p>
+      <p className={`mt-1 text-sm text-[color:var(--ink)] ${mono ? 'font-mono break-all text-xs' : ''}`}>{value}</p>
     </div>
   )
 }

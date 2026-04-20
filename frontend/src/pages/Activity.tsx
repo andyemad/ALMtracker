@@ -9,9 +9,9 @@ import { useDebounce } from '../hooks/useDebounce'
 import { LocationChip } from '../components/LocationChip'
 
 const EVENT_ICONS = {
-  added: { Icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10', badge: 'badge-new', label: 'Added' },
-  removed: { Icon: TrendingDown, color: 'text-red-400', bg: 'bg-red-500/10', badge: 'badge-removed', label: 'Removed' },
-  price_change: { Icon: DollarSign, color: 'text-amber-400', bg: 'bg-amber-500/10', badge: 'badge-price', label: 'Price Change' },
+  added: { Icon: TrendingUp, color: 'text-[color:var(--positive)]', bg: 'bg-emerald-500/10', badge: 'badge-new', label: 'Added' },
+  removed: { Icon: TrendingDown, color: 'text-[color:var(--danger)]', bg: 'bg-red-500/10', badge: 'badge-removed', label: 'Removed' },
+  price_change: { Icon: DollarSign, color: 'text-[color:var(--warn)]', bg: 'bg-amber-500/10', badge: 'badge-price', label: 'Price Change' },
 }
 
 const PAGE_SIZE = 25
@@ -55,8 +55,8 @@ export default function Activity() {
     <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Activity Log</h1>
-          <p className="text-slate-400 text-sm mt-0.5">Every inventory change tracked automatically</p>
+          <h1 className="text-2xl font-bold text-[color:var(--ink)]">Activity Log</h1>
+          <p className="text-[color:var(--muted)] text-sm mt-0.5">Every inventory change tracked automatically</p>
         </div>
         <LocationChip />
       </div>
@@ -75,8 +75,8 @@ export default function Activity() {
               <div className={`w-8 h-8 rounded-lg ${style.bg} flex items-center justify-center mb-2`}>
                 <style.Icon className={`w-4 h-4 ${style.color}`} />
               </div>
-              <div className="text-xl font-bold text-white">{counts[type]}</div>
-              <div className="text-xs text-slate-400">{style.label}</div>
+              <div className="text-xl font-bold text-[color:var(--ink)]">{counts[type]}</div>
+              <div className="text-xs text-[color:var(--muted)]">{style.label}</div>
             </button>
           )
         })}
@@ -84,7 +84,7 @@ export default function Activity() {
 
       {/* Filters */}
       <div className="card p-4 flex items-center gap-3 flex-wrap">
-        <Filter className="w-4 h-4 text-slate-400 flex-shrink-0" />
+        <Filter className="w-4 h-4 text-[color:var(--muted)] flex-shrink-0" />
         <div className="flex gap-1">
           {['', 'added', 'removed', 'price_change'].map(t => (
             <button
@@ -92,8 +92,8 @@ export default function Activity() {
               onClick={() => { setEventType(t); setPage(1) }}
               className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${
                 eventType === t
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  ? 'bg-brand-600 text-[color:var(--ink)]'
+                  : 'bg-[color:var(--hairline)] text-[color:var(--ink-2)] hover:bg-[color:var(--hairline-2)]'
               }`}
             >
               {t === '' ? 'All' : t === 'added' ? 'Added' : t === 'removed' ? 'Removed' : 'Price Changes'}
@@ -101,7 +101,7 @@ export default function Activity() {
           ))}
         </div>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[color:var(--muted)]" />
           <input
             className="input pl-9 w-48"
             placeholder="Stock #, VIN, make..."
@@ -110,7 +110,7 @@ export default function Activity() {
           />
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs text-slate-400">Show last</span>
+          <span className="text-xs text-[color:var(--muted)]">Show last</span>
           <select
             className="select w-auto"
             value={days}
@@ -123,7 +123,7 @@ export default function Activity() {
             <option value={90}>90 days</option>
           </select>
         </div>
-        <span className="text-xs text-slate-500">{total.toLocaleString()} events</span>
+        <span className="text-xs text-[color:var(--muted)]">{total.toLocaleString()} events</span>
       </div>
 
       {/* Timeline */}
@@ -131,15 +131,15 @@ export default function Activity() {
         {loading ? (
           [...Array(8)].map((_, i) => (
             <div key={i} className="p-4 flex gap-4 animate-pulse">
-              <div className="w-8 h-8 rounded-lg bg-slate-700 flex-shrink-0" />
+              <div className="w-8 h-8 rounded-lg bg-[color:var(--hairline)] flex-shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-slate-700 rounded w-3/4" />
-                <div className="h-3 bg-slate-800 rounded w-1/2" />
+                <div className="h-4 bg-[color:var(--hairline)] rounded w-3/4" />
+                <div className="h-3 bg-[color:var(--bg-2)] rounded w-1/2" />
               </div>
             </div>
           ))
         ) : events.length === 0 ? (
-          <div className="py-16 text-center text-slate-500">No events found</div>
+          <div className="py-16 text-center text-[color:var(--muted)]">No events found</div>
         ) : (
           events.map(ev => <EventItem key={ev.id} ev={ev} />)
         )}
@@ -148,11 +148,11 @@ export default function Activity() {
       {/* Pagination */}
       {pages > 1 && (
         <div className="flex items-center justify-between">
-          <span className="text-slate-400 text-xs">
+          <span className="text-[color:var(--muted)] text-xs">
             {total.toLocaleString()} events · page {page} of {pages}
           </span>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPage(1)} disabled={page === 1} className="btn-ghost p-1.5 disabled:opacity-30 text-xs text-slate-400">
+            <button onClick={() => setPage(1)} disabled={page === 1} className="btn-ghost p-1.5 disabled:opacity-30 text-xs text-[color:var(--muted)]">
               First
             </button>
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-ghost p-1.5 disabled:opacity-30">
@@ -165,7 +165,7 @@ export default function Activity() {
                   key={p}
                   onClick={() => setPage(p)}
                   className={`w-7 h-7 rounded text-xs transition-colors ${
-                    p === page ? 'bg-brand-600 text-white' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-700'
+                    p === page ? 'bg-brand-600 text-[color:var(--ink)]' : 'text-[color:var(--muted)] hover:text-[color:var(--ink)] hover:bg-[color:var(--hairline)]'
                   }`}
                 >
                   {p}
@@ -175,7 +175,7 @@ export default function Activity() {
             <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page >= pages} className="btn-ghost p-1.5 disabled:opacity-30">
               <ChevronRight className="w-4 h-4" />
             </button>
-            <button onClick={() => setPage(pages)} disabled={page >= pages} className="btn-ghost p-1.5 disabled:opacity-30 text-xs text-slate-400">
+            <button onClick={() => setPage(pages)} disabled={page >= pages} className="btn-ghost p-1.5 disabled:opacity-30 text-xs text-[color:var(--muted)]">
               Last
             </button>
           </div>
@@ -190,11 +190,11 @@ function PriceChangeDetail({ oldValue, newValue }: { oldValue: string; newValue:
   const newP = Number(newValue)
   const dropped = newP < oldP
   return (
-    <p className="text-xs text-slate-400 mt-1">
-      <span className="text-slate-400">${oldP.toLocaleString()}</span>
+    <p className="text-xs text-[color:var(--muted)] mt-1">
+      <span className="text-[color:var(--muted)]">${oldP.toLocaleString()}</span>
       <span className="mx-1">→</span>
-      <span className={dropped ? 'text-emerald-400' : 'text-red-400'}>${newP.toLocaleString()}</span>
-      <span className={`ml-1 ${dropped ? 'text-emerald-500' : 'text-red-500'}`}>
+      <span className={dropped ? 'text-[color:var(--positive)]' : 'text-[color:var(--danger)]'}>${newP.toLocaleString()}</span>
+      <span className={`ml-1 ${dropped ? 'text-[color:var(--positive)]' : 'text-red-500'}`}>
         ({dropped ? '↓' : '↑'} ${Math.abs(newP - oldP).toLocaleString()})
       </span>
     </p>
@@ -206,7 +206,7 @@ function EventItem({ ev }: { ev: VehicleEvent }) {
   const fmt$ = (n: number | null) => n ? `$${n.toLocaleString()}` : null
 
   return (
-    <div className="p-4 flex items-start gap-4 hover:bg-slate-700/20 transition-colors">
+    <div className="p-4 flex items-start gap-4 hover:bg-[color:var(--hairline)] transition-colors">
       <div className={`w-8 h-8 rounded-lg ${style.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
         <style.Icon className={`w-4 h-4 ${style.color}`} />
       </div>
@@ -215,11 +215,11 @@ function EventItem({ ev }: { ev: VehicleEvent }) {
           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${style.badge}`}>
             {style.label}
           </span>
-          <p className="text-sm text-slate-200 font-medium">
+          <p className="text-sm text-[color:var(--ink)] font-medium">
             {[ev.year, ev.make, ev.model, ev.trim].filter(Boolean).join(' ')}
           </p>
           {fmt$(ev.price) && (
-            <span className="text-sm text-white font-semibold">{fmt$(ev.price)}</span>
+            <span className="text-sm text-[color:var(--ink)] font-semibold">{fmt$(ev.price)}</span>
           )}
         </div>
 
@@ -227,11 +227,11 @@ function EventItem({ ev }: { ev: VehicleEvent }) {
           <PriceChangeDetail oldValue={ev.old_value} newValue={ev.new_value} />
         )}
 
-        <p className="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
+        <p className="text-xs text-[color:var(--muted)] mt-1 flex items-center gap-2 flex-wrap">
           <span>Stock #{ev.stock_number}</span>
           {ev.vin && <span className="font-mono">{ev.vin}</span>}
           {ev.location_name && (
-            <span className="flex items-center gap-1 text-slate-400">
+            <span className="flex items-center gap-1 text-[color:var(--muted)]">
               <MapPin className="w-3 h-3" />{ev.location_name}
             </span>
           )}
@@ -251,10 +251,10 @@ function EventItem({ ev }: { ev: VehicleEvent }) {
           </a>
         )}
         <div className="text-right">
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[color:var(--muted)]">
             {formatDistanceToNow(new Date(ev.timestamp + 'Z'), { addSuffix: true })}
           </p>
-          <p className="text-[11px] text-slate-600 mt-0.5">
+          <p className="text-[11px] text-[color:var(--muted)] mt-0.5">
             {format(new Date(ev.timestamp + 'Z'), 'MMM d, h:mm a')}
           </p>
         </div>

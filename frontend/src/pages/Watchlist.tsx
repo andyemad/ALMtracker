@@ -111,8 +111,8 @@ export default function Watchlist() {
     <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Watchlist</h1>
-          <p className="text-slate-400 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-[color:var(--ink)]">Watchlist</h1>
+          <p className="text-[color:var(--muted)] text-sm mt-0.5">
             Get notified when matching vehicles arrive
           </p>
         </div>
@@ -128,10 +128,10 @@ export default function Watchlist() {
       {/* Example hint */}
       <div className="card p-4 border-dashed flex items-start gap-3">
         <Bell className="w-4 h-4 text-brand-400 mt-0.5 flex-shrink-0" />
-        <p className="text-sm text-slate-400">
-          Example: <span className="text-slate-200">Tesla Model Y</span> under{' '}
-          <span className="text-slate-200">$25,000</span> with less than{' '}
-          <span className="text-slate-200">50,000 miles</span> — set it and get alerted the moment it lands.
+        <p className="text-sm text-[color:var(--muted)]">
+          Example: <span className="text-[color:var(--ink)]">Tesla Model Y</span> under{' '}
+          <span className="text-[color:var(--ink)]">$25,000</span> with less than{' '}
+          <span className="text-[color:var(--ink)]">50,000 miles</span> — set it and get alerted the moment it lands.
         </p>
       </div>
 
@@ -139,7 +139,7 @@ export default function Watchlist() {
       {showForm && (
         <div className="card p-6 border-brand-600/30">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-white">
+            <h2 className="text-base font-semibold text-[color:var(--ink)]">
               {editing ? 'Edit Alert' : 'Create Alert'}
             </h2>
             <button onClick={() => setShowForm(false)} className="btn-ghost p-1.5">
@@ -149,31 +149,31 @@ export default function Watchlist() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className="block text-xs text-slate-400 mb-1.5">Alert Name *</label>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Alert Name *</label>
               <input className="input" placeholder="e.g. Tesla Model Y Deal" value={form.name} onChange={f('name')} />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Make</label>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Make</label>
               <input className="input" placeholder="e.g. Tesla" value={form.make} onChange={f('make')} />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Model</label>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Model</label>
               <input className="input" placeholder="e.g. Model Y" value={form.model} onChange={f('model')} />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Min Price ($)</label>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Min Price ($)</label>
               <input className="input" type="number" placeholder="0" value={form.min_price} onChange={f('min_price')} />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Max Price ($)</label>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Max Price ($)</label>
               <input className="input" type="number" placeholder="25000" value={form.max_price} onChange={f('max_price')} />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Max Mileage</label>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Max Mileage</label>
               <input className="input" type="number" placeholder="50000" value={form.max_mileage} onChange={f('max_mileage')} />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Condition</label>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Condition</label>
               <select className="select" value={form.condition} onChange={f('condition')}>
                 <option value="">Any</option>
                 <option value="new">New</option>
@@ -181,25 +181,25 @@ export default function Watchlist() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Min Year</label>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Min Year</label>
               <input className="input" type="number" placeholder="2020" value={form.min_year} onChange={f('min_year')} />
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">Max Year</label>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Max Year</label>
               <input className="input" type="number" placeholder="2025" value={form.max_year} onChange={f('max_year')} />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs text-slate-400 mb-1.5">
-                Email Notification <span className="text-slate-600">(get emailed when a match lands)</span>
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">
+                Email Notification <span className="text-[color:var(--muted)]">(get emailed when a match lands)</span>
               </label>
               <input className="input" type="email" placeholder="you@example.com" value={form.notification_email} onChange={f('notification_email')} />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs text-slate-400 mb-1.5">Location Scope</label>
-              <div className="text-xs text-slate-300 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg">
+              <label className="block text-xs text-[color:var(--muted)] mb-1.5">Location Scope</label>
+              <div className="text-xs text-[color:var(--ink-2)] px-3 py-2 bg-[color:var(--card)] border border-[color:var(--hairline-2)] rounded-lg">
                 {selectedDealer ? `Scoped to: ${selectedDealer.name}` : 'All Locations (no dealer filter)'}
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-[color:var(--muted)] mt-1">
                 Switch location in the sidebar to scope this alert to a specific store.
               </p>
             </div>
@@ -225,7 +225,7 @@ export default function Watchlist() {
       ) : alerts.length === 0 ? (
         <div className="card p-16 text-center">
           <Bell className="w-10 h-10 text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-500">No alerts yet. Create one to monitor for specific vehicles.</p>
+          <p className="text-[color:var(--muted)]">No alerts yet. Create one to monitor for specific vehicles.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -265,15 +265,15 @@ function AlertCard({ alert: a, onToggle, onEdit, onDelete }: {
     }`}>
       {/* Icon */}
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-        a.is_active ? 'bg-brand-600/20' : 'bg-slate-700'
+        a.is_active ? 'bg-brand-600/20' : 'bg-[color:var(--hairline)]'
       }`}>
-        <Bell className={`w-5 h-5 ${a.is_active ? 'text-brand-400' : 'text-slate-500'}`} />
+        <Bell className={`w-5 h-5 ${a.is_active ? 'text-brand-400' : 'text-[color:var(--muted)]'}`} />
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <h3 className="font-semibold text-white">{a.name}</h3>
+          <h3 className="font-semibold text-[color:var(--ink)]">{a.name}</h3>
           {a.match_count > 0 && (() => {
             const params = new URLSearchParams()
             if (a.make) params.set('make', a.make)
@@ -282,7 +282,7 @@ function AlertCard({ alert: a, onToggle, onEdit, onDelete }: {
               <Link
                 to={`/inventory?${params.toString()}`}
                 onClick={e => e.stopPropagation()}
-                className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400
+                className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-[color:var(--positive)]
                            border border-emerald-500/30 flex items-center gap-1
                            hover:bg-emerald-500/25 transition-colors"
               >
@@ -296,14 +296,14 @@ function AlertCard({ alert: a, onToggle, onEdit, onDelete }: {
         {criteria.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {criteria.map((c, i) => (
-              <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+              <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-[color:var(--hairline)] text-[color:var(--ink-2)]">
                 {c}
               </span>
             ))}
           </div>
         )}
 
-        <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-500">
+        <div className="flex items-center gap-4 mt-2 text-[11px] text-[color:var(--muted)]">
           {a.notification_email && (
             <span>Email: {a.notification_email}</span>
           )}
@@ -323,8 +323,8 @@ function AlertCard({ alert: a, onToggle, onEdit, onDelete }: {
         </button>
         <button onClick={onToggle} className="btn-ghost p-1.5" title={a.is_active ? 'Disable' : 'Enable'}>
           {a.is_active
-            ? <ToggleRight className="w-4 h-4 text-emerald-400" />
-            : <ToggleLeft className="w-4 h-4 text-slate-500" />}
+            ? <ToggleRight className="w-4 h-4 text-[color:var(--positive)]" />
+            : <ToggleLeft className="w-4 h-4 text-[color:var(--muted)]" />}
         </button>
         <DeleteButton onConfirm={onDelete} />
       </div>

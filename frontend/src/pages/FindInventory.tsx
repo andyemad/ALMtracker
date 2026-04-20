@@ -128,26 +128,26 @@ export default function FindInventory() {
   const campaignLabel = [source, campaign].filter(Boolean).join(' / ') || 'Direct'
 
   return (
-    <div className="min-h-dvh bg-slate-950 text-slate-100">
+    <div className="min-h-dvh bg-[color:var(--bg)] text-[color:var(--ink)]">
       <div className="mx-auto flex min-h-dvh max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
 
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 via-cyan-400 to-emerald-400 p-[1px] shadow-[0_0_35px_rgba(79,70,229,0.35)]">
-              <div className="flex h-full w-full items-center justify-center rounded-2xl bg-slate-950">
-                <Car className="h-5 w-5 text-white" />
+              <div className="flex h-full w-full items-center justify-center rounded-2xl bg-[color:var(--bg)]">
+                <Car className="h-5 w-5 text-[color:var(--ink)]" />
               </div>
             </div>
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-300/70">ALM Cars</div>
-              <div className="text-sm font-semibold text-white">Find Your Next Car</div>
+              <div className="text-sm font-semibold text-[color:var(--ink)]">Find Your Next Car</div>
             </div>
           </Link>
 
           <a
             href="tel:+14046260000"
-            className="hidden items-center gap-2 rounded-full border border-slate-700 bg-slate-800/60 px-4 py-2 text-sm text-slate-200 transition-colors hover:border-brand-500/40 hover:bg-slate-800 sm:flex"
+            className="hidden items-center gap-2 rounded-full border border-[color:var(--hairline-2)] bg-[color:var(--bg-2)] px-4 py-2 text-sm text-[color:var(--ink)] transition-colors hover:border-brand-500/40 hover:bg-[color:var(--bg-2)] sm:flex"
           >
             <PhoneCall className="h-3.5 w-3.5 text-cyan-300" />
             Call ALM directly
@@ -166,10 +166,10 @@ export default function FindInventory() {
               </div>
 
               <div className="space-y-3">
-                <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+                <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-[color:var(--ink)] sm:text-5xl">
                   Tell ALM what you want.<br className="hidden sm:block" /> Get matched fast.
                 </h1>
-                <p className="max-w-xl text-base text-slate-300 sm:text-lg">
+                <p className="max-w-xl text-base text-[color:var(--ink-2)] sm:text-lg">
                   Real inventory. Real prices. ALM checks every lot and follows up with options that actually fit your budget.
                 </p>
               </div>
@@ -188,7 +188,7 @@ export default function FindInventory() {
 
                 {/* Make */}
                 <div>
-                  <label className="mb-1.5 block text-xs text-slate-400">Make</label>
+                  <label className="mb-1.5 block text-xs text-[color:var(--muted)]">Make</label>
                   <select
                     className="select"
                     value={form.interested_make}
@@ -201,7 +201,7 @@ export default function FindInventory() {
 
                 {/* Model */}
                 <div>
-                  <label className="mb-1.5 block text-xs text-slate-400">Model</label>
+                  <label className="mb-1.5 block text-xs text-[color:var(--muted)]">Model</label>
                   <input
                     className="input"
                     placeholder="Elantra, Rogue, F-150…"
@@ -212,7 +212,7 @@ export default function FindInventory() {
 
                 {/* Budget */}
                 <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-xs text-slate-400">Max Budget</label>
+                  <label className="mb-1.5 block text-xs text-[color:var(--muted)]">Max Budget</label>
                   <div className="flex flex-wrap gap-2">
                     {BUDGET_PRESETS.map(p => {
                       // Only highlight if value is non-empty (prevents $60k+ glowing on initial load)
@@ -224,8 +224,8 @@ export default function FindInventory() {
                           onClick={() => handleBudgetPreset(active ? '' : p.value)}
                           className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition-all ${
                             active
-                              ? 'border-brand-500/50 bg-brand-600/25 text-white shadow-[0_0_14px_rgba(79,70,229,0.25)]'
-                              : 'border-slate-700 bg-slate-900/80 text-slate-300 hover:border-slate-600 hover:text-white'
+                              ? 'border-brand-500/50 bg-brand-600/25 text-[color:var(--ink)] shadow-[0_0_14px_rgba(79,70,229,0.25)]'
+                              : 'border-[color:var(--hairline-2)] bg-[color:var(--card)] text-[color:var(--ink-2)] hover:border-slate-600 hover:text-[color:var(--ink)]'
                           }`}
                         >
                           {p.label}
@@ -245,7 +245,7 @@ export default function FindInventory() {
 
                 {/* Condition */}
                 <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-xs text-slate-400">Condition</label>
+                  <label className="mb-1.5 block text-xs text-[color:var(--muted)]">Condition</label>
                   <div className="flex gap-2">
                     {(['', 'new', 'pre-owned'] as const).map(cond => {
                       const labels: Record<string, string> = { '': 'Either', 'new': 'New', 'pre-owned': 'Pre-Owned' }
@@ -257,8 +257,8 @@ export default function FindInventory() {
                           onClick={() => setField('interested_condition')(cond)}
                           className={`flex-1 rounded-xl border py-2 text-xs font-medium transition-all ${
                             active
-                              ? 'border-brand-500/50 bg-brand-600/25 text-white'
-                              : 'border-slate-700 bg-slate-900/80 text-slate-400 hover:border-slate-600 hover:text-slate-200'
+                              ? 'border-brand-500/50 bg-brand-600/25 text-[color:var(--ink)]'
+                              : 'border-[color:var(--hairline-2)] bg-[color:var(--card)] text-[color:var(--muted)] hover:border-slate-600 hover:text-[color:var(--ink)]'
                           }`}
                         >
                           {labels[cond]}
@@ -270,7 +270,7 @@ export default function FindInventory() {
 
                 {/* Name */}
                 <div>
-                  <label className="mb-1.5 block text-xs text-slate-400">Your Name <span className="text-red-400">*</span></label>
+                  <label className="mb-1.5 block text-xs text-[color:var(--muted)]">Your Name <span className="text-[color:var(--danger)]">*</span></label>
                   <input
                     className="input"
                     placeholder="First and last name"
@@ -281,7 +281,7 @@ export default function FindInventory() {
 
                 {/* Phone */}
                 <div>
-                  <label className="mb-1.5 block text-xs text-slate-400">Mobile Number</label>
+                  <label className="mb-1.5 block text-xs text-[color:var(--muted)]">Mobile Number</label>
                   <input
                     className="input"
                     type="tel"
@@ -293,7 +293,7 @@ export default function FindInventory() {
 
                 {/* Email */}
                 <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-xs text-slate-400">Email (optional)</label>
+                  <label className="mb-1.5 block text-xs text-[color:var(--muted)]">Email (optional)</label>
                   <input
                     className="input"
                     type="email"
@@ -304,35 +304,35 @@ export default function FindInventory() {
                 </div>
 
                 {/* Consent */}
-                <div className="sm:col-span-2 space-y-3 rounded-2xl border border-slate-700/60 bg-slate-950/60 p-4">
-                  <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-200">
+                <div className="sm:col-span-2 space-y-3 rounded-2xl border border-[color:var(--hairline-2)] bg-slate-950/60 p-4">
+                  <label className="flex cursor-pointer items-start gap-3 text-sm text-[color:var(--ink)]">
                     <input
                       type="checkbox"
                       checked={form.smsConsent}
                       onChange={e => setField('smsConsent')(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-brand-500"
+                      className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-[color:var(--card)] accent-brand-500"
                     />
                     <span>Text me matching inventory and pricing updates</span>
                   </label>
-                  <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-200">
+                  <label className="flex cursor-pointer items-start gap-3 text-sm text-[color:var(--ink)]">
                     <input
                       type="checkbox"
                       checked={form.callConsent}
                       onChange={e => setField('callConsent')(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 accent-brand-500"
+                      className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-[color:var(--card)] accent-brand-500"
                     />
                     <span>Call me about available vehicles and appointments</span>
                   </label>
-                  <div className="flex items-start gap-2 text-xs text-slate-500">
-                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400/70" />
+                  <div className="flex items-start gap-2 text-xs text-[color:var(--muted)]">
+                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[color:var(--positive)]/70" />
                     <span>{CONSENT_DISCLOSURE}</span>
                   </div>
                 </div>
 
                 {/* Submit row */}
                 <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-[11px] text-slate-600">
-                    Tracked as <span className="text-slate-500">{campaignLabel}</span>
+                  <p className="text-[11px] text-[color:var(--muted)]">
+                    Tracked as <span className="text-[color:var(--muted)]">{campaignLabel}</span>
                   </p>
                   <button
                     type="submit"
@@ -360,8 +360,8 @@ export default function FindInventory() {
             <div className="card p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold text-white">Matching Inventory</h2>
-                  <p className="mt-0.5 text-sm text-slate-400">
+                  <h2 className="text-lg font-semibold text-[color:var(--ink)]">Matching Inventory</h2>
+                  <p className="mt-0.5 text-sm text-[color:var(--muted)]">
                     {submitted
                       ? `${filteredMatches.length} vehicle${filteredMatches.length === 1 ? '' : 's'} match your request`
                       : 'Submit the form to see live ALM matches.'}
@@ -389,8 +389,8 @@ export default function FindInventory() {
                   <CheckCircle2 className="h-7 w-7 text-brand-400" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-white">Share this page anywhere</h3>
-                  <p className="max-w-xs text-sm text-slate-400">
+                  <h3 className="text-lg font-semibold text-[color:var(--ink)]">Share this page anywhere</h3>
+                  <p className="max-w-xs text-sm text-[color:var(--muted)]">
                     Drop the link in your TikTok bio, Facebook ads, or DMs. Every submission goes straight into your lead pipeline.
                   </p>
                 </div>
@@ -400,12 +400,12 @@ export default function FindInventory() {
                   className="btn-secondary gap-2 px-4 py-2"
                 >
                   {copied ? (
-                    <><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Copied!</>
+                    <><CheckCircle2 className="h-4 w-4 text-[color:var(--positive)]" /> Copied!</>
                   ) : (
                     <><Copy className="h-4 w-4" /> Copy link</>
                   )}
                 </button>
-                <div className="w-full rounded-xl border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-center text-xs text-slate-500 break-all font-mono">
+                <div className="w-full rounded-xl border border-[color:var(--hairline-2)] bg-[color:var(--card)] px-3 py-2 text-center text-xs text-[color:var(--muted)] break-all font-mono">
                   {window.location.href}
                 </div>
               </div>
@@ -415,8 +415,8 @@ export default function FindInventory() {
             {submitted && !submitting && filteredMatches.length === 0 && (
               <div className="card p-8 text-center space-y-3">
                 <div className="text-3xl">🔍</div>
-                <h3 className="text-lg font-semibold text-white">No exact matches right now</h3>
-                <p className="text-sm text-slate-400">
+                <h3 className="text-lg font-semibold text-[color:var(--ink)]">No exact matches right now</h3>
+                <p className="text-sm text-[color:var(--muted)]">
                   Your request is saved. When matching inventory arrives across any ALM location, you'll be the first to know.
                 </p>
                 <a href="tel:+14046260000" className="btn-primary mx-auto mt-2 w-fit">
@@ -456,8 +456,8 @@ function ValueCard({
       <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600/20 text-brand-400 ring-1 ring-brand-500/25">
         <Icon className="h-4 w-4" />
       </div>
-      <h3 className="text-sm font-semibold text-white">{title}</h3>
-      <p className="mt-1 text-xs text-slate-400">{body}</p>
+      <h3 className="text-sm font-semibold text-[color:var(--ink)]">{title}</h3>
+      <p className="mt-1 text-xs text-[color:var(--muted)]">{body}</p>
     </div>
   )
 }
@@ -465,11 +465,11 @@ function ValueCard({
 function SkeletonCard() {
   return (
     <div className="card overflow-hidden animate-pulse">
-      <div className="h-36 w-full bg-slate-800/70" />
+      <div className="h-36 w-full bg-[color:var(--bg-2)]" />
       <div className="p-4 space-y-3">
-        <div className="h-4 w-3/4 rounded-lg bg-slate-800" />
-        <div className="h-3 w-1/2 rounded-lg bg-slate-800" />
-        <div className="h-8 w-full rounded-xl bg-slate-800 mt-2" />
+        <div className="h-4 w-3/4 rounded-lg bg-[color:var(--bg-2)]" />
+        <div className="h-3 w-1/2 rounded-lg bg-[color:var(--bg-2)]" />
+        <div className="h-8 w-full rounded-xl bg-[color:var(--bg-2)] mt-2" />
       </div>
     </div>
   )
@@ -488,11 +488,11 @@ function VehicleCard({ vehicle, index }: { vehicle: Vehicle; index: number }) {
         <img
           src={vehicle.image_url}
           alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-          className="h-44 w-full object-cover bg-slate-800"
+          className="h-44 w-full object-cover bg-[color:var(--bg-2)]"
           loading="lazy"
         />
       ) : (
-        <div className="flex h-28 w-full items-center justify-center bg-slate-800/60 text-xs text-slate-600">
+        <div className="flex h-28 w-full items-center justify-center bg-[color:var(--bg-2)] text-xs text-[color:var(--muted)]">
           <Car className="h-8 w-8 opacity-30" />
         </div>
       )}
@@ -501,13 +501,13 @@ function VehicleCard({ vehicle, index }: { vehicle: Vehicle; index: number }) {
         {/* Title row */}
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-semibold text-white">
+            <h3 className="truncate text-sm font-semibold text-[color:var(--ink)]">
               {[vehicle.year, vehicle.make, vehicle.model, vehicle.trim].filter(Boolean).join(' ')}
             </h3>
-            <p className="mt-0.5 text-xs text-slate-400">{fmtMi(vehicle.mileage)}</p>
+            <p className="mt-0.5 text-xs text-[color:var(--muted)]">{fmtMi(vehicle.mileage)}</p>
           </div>
           <div className="shrink-0 text-right">
-            <div className="text-base font-bold text-white">{fmt$(vehicle.price)}</div>
+            <div className="text-base font-bold text-[color:var(--ink)]">{fmt$(vehicle.price)}</div>
             <span className={isNew ? 'badge-new-vehicle' : 'badge-used'}>
               {isNew ? 'New' : 'Pre-Owned'}
             </span>
@@ -515,7 +515,7 @@ function VehicleCard({ vehicle, index }: { vehicle: Vehicle; index: number }) {
         </div>
 
         {/* Location + days on lot */}
-        <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-[color:var(--muted)]">
           <MapPin className="h-3.5 w-3.5 shrink-0 text-cyan-300/70" />
           <span className="truncate">{vehicle.location_name ?? 'ALM location'}</span>
           <span className="ml-auto shrink-0 whitespace-nowrap tabular-nums">
@@ -535,7 +535,7 @@ function VehicleCard({ vehicle, index }: { vehicle: Vehicle; index: number }) {
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         ) : (
-          <div className="mt-4 rounded-xl border border-slate-700/60 bg-slate-900/40 px-3 py-2.5 text-center text-xs text-slate-500">
+          <div className="mt-4 rounded-xl border border-[color:var(--hairline-2)] bg-[color:var(--card)] px-3 py-2.5 text-center text-xs text-[color:var(--muted)]">
             Stock #{vehicle.stock_number} · Ask ALM about this vehicle
           </div>
         )}
