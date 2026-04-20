@@ -8,7 +8,20 @@ import { getAnalytics } from '../api'
 import { useDealer } from '../context/DealerContext'
 import type { AnalyticsData } from '../types'
 
-const BRAND_COLORS = ['#6366f1', '#22d3ee', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#0ea5e9', '#a855f7']
+const BRAND_COLORS = [
+  'oklch(0.62 0.14 48)',   // copper accent
+  'oklch(0.32 0.010 60)',  // ink-2 (espresso)
+  'oklch(0.58 0.08 170)',  // positive (sage)
+  'oklch(0.68 0.14 75)',   // warn (amber)
+  'oklch(0.52 0.008 65)',  // muted
+  'oklch(0.58 0.16 28)',   // danger
+  'oklch(0.72 0.10 48)',   // light copper
+  'oklch(0.45 0.06 60)',   // deeper warm
+  'oklch(0.68 0.09 170)',  // light sage
+  'oklch(0.78 0.10 75)',   // light amber
+  'oklch(0.38 0.02 60)',   // deep espresso
+  'oklch(0.85 0.04 75)',   // cream
+]
 const MOG_DEALER_ID = 323
 
 const COLOR_MAP: Record<string, string> = {
@@ -43,32 +56,35 @@ interface KpiCardProps {
   accent?: string
 }
 
-function KpiCard({ icon, label, value, sub, accent = 'from-brand-500/20 to-cyan-500/10' }: KpiCardProps) {
+function KpiCard({ icon, label, value, sub }: KpiCardProps) {
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-slate-800/80 bg-gradient-to-br ${accent} p-5 backdrop-blur-sm`}>
+    <div className="stat-card">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</p>
-          <p className="mt-1.5 text-3xl font-bold text-white">{value}</p>
-          {sub && <p className="mt-1 text-xs text-slate-500">{sub}</p>}
+        <div className="min-w-0">
+          <p className="eyebrow">{label}</p>
+          <p className="midnum mt-2" style={{ color: 'var(--ink)' }}>{value}</p>
+          {sub && <p className="mt-1.5 text-xs" style={{ color: 'var(--muted)' }}>{sub}</p>}
         </div>
-        <div className="rounded-xl bg-slate-800/60 p-2.5 text-slate-300">{icon}</div>
+        <div className="p-2" style={{ color: 'var(--accent)' }}>{icon}</div>
       </div>
     </div>
   )
 }
 
 const urgencyConfig = {
-  critical: { label: 'Critical', bg: 'bg-red-500/15 border-red-500/30 text-red-400', dot: 'bg-red-400' },
-  high:     { label: 'High',     bg: 'bg-orange-500/15 border-orange-500/30 text-orange-400', dot: 'bg-orange-400' },
-  medium:   { label: 'Medium',   bg: 'bg-amber-500/15 border-amber-500/30 text-amber-400', dot: 'bg-amber-400' },
+  critical: { label: 'Critical', color: 'var(--danger)',   bg: 'oklch(0.58 0.16 28 / 0.10)', border: 'oklch(0.58 0.16 28 / 0.25)' },
+  high:     { label: 'High',     color: 'var(--warn)',     bg: 'oklch(0.68 0.14 75 / 0.10)', border: 'oklch(0.68 0.14 75 / 0.25)' },
+  medium:   { label: 'Medium',   color: 'var(--muted)',    bg: 'var(--bg-2)',                border: 'var(--hairline)' },
 }
 
 function UrgencyBadge({ urgency }: { urgency: 'critical' | 'high' | 'medium' }) {
   const cfg = urgencyConfig[urgency]
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cfg.bg}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium"
+      style={{ color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}` }}
+    >
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: cfg.color }} />
       {cfg.label}
     </span>
   )
@@ -77,10 +93,15 @@ function UrgencyBadge({ urgency }: { urgency: 'critical' | 'high' | 'medium' }) 
 const CustomBarTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 shadow-xl text-xs">
-      <p className="font-semibold text-white mb-1">{label}</p>
+    <div
+      className="px-3 py-2 text-xs"
+      style={{ background: 'var(--card)', border: '1px solid var(--hairline-2)', color: 'var(--ink)' }}
+    >
+      <p className="eyebrow mb-1">{label}</p>
       {payload.map((p: any, i: number) => (
-        <p key={i} style={{ color: p.color }}>{p.name}: <span className="font-bold">{p.value}</span></p>
+        <p key={i} className="mono" style={{ color: p.color, fontSize: 11 }}>
+          {p.name}: <span style={{ fontWeight: 600 }}>{p.value}</span>
+        </p>
       ))}
     </div>
   )
@@ -89,9 +110,14 @@ const CustomBarTooltip = ({ active, payload, label }: any) => {
 const CustomLineTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 shadow-xl text-xs">
-      <p className="font-semibold text-slate-400 mb-1">{label}</p>
-      <p className="text-cyan-400 font-bold">{payload[0].value} sold</p>
+    <div
+      className="px-3 py-2 text-xs"
+      style={{ background: 'var(--card)', border: '1px solid var(--hairline-2)' }}
+    >
+      <p className="eyebrow mb-1">{label}</p>
+      <p className="mono" style={{ color: 'var(--accent)', fontSize: 11, fontWeight: 600 }}>
+        {payload[0].value} sold
+      </p>
     </div>
   )
 }
@@ -115,11 +141,11 @@ export default function Analytics() {
     return (
       <div className="p-6 space-y-6 animate-pulse">
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-2xl bg-slate-800/60" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="h-28" style={{ background: 'var(--bg-2)' }} />)}
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="h-72 rounded-2xl bg-slate-800/60" />
-          <div className="h-72 rounded-2xl bg-slate-800/60" />
+          <div className="h-72" style={{ background: 'var(--bg-2)' }} />
+          <div className="h-72" style={{ background: 'var(--bg-2)' }} />
         </div>
       </div>
     )
@@ -128,9 +154,9 @@ export default function Analytics() {
   if (!data || data.summary.total_sold === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
-        <Car className="w-12 h-12 text-slate-600 mb-4" />
-        <p className="text-slate-400">No sold vehicle data available yet.</p>
-        <p className="text-slate-600 text-sm mt-1">Analytics will populate once vehicles cycle off the lot.</p>
+        <Car className="w-12 h-12 mb-4" style={{ color: 'var(--muted)' }} />
+        <p className="serif" style={{ fontSize: 20, color: 'var(--ink-2)' }}>No sold vehicle data available yet.</p>
+        <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>Analytics will populate once vehicles cycle off the lot.</p>
       </div>
     )
   }
@@ -149,19 +175,24 @@ export default function Analytics() {
     <div className="p-4 sm:p-6 space-y-8">
 
       {/* Page header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-end justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Sales Analytics</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="eyebrow">ANALYTICS · SOLD VEHICLES</p>
+          <h1 className="serif mt-2" style={{ fontSize: 'clamp(32px, 3.4vw, 46px)', color: 'var(--ink)', lineHeight: 1 }}>
+            Sales intelligence.
+          </h1>
+          <p className="text-sm mt-2" style={{ color: 'var(--muted)' }}>
             {selectedDealer ? selectedDealer.name : 'All 24 Locations'} ·{' '}
             {summary.date_from && summary.date_to
               ? `${summary.date_from} → ${summary.date_to}`
               : 'All time'}
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-400 font-semibold">
-          <TrendingUp className="w-3.5 h-3.5" />
-          {summary.total_sold.toLocaleString()} vehicles sold
+        <div className="chip" style={{ color: 'var(--positive)', borderColor: 'oklch(0.58 0.08 170 / 0.35)', background: 'oklch(0.58 0.08 170 / 0.08)' }}>
+          <TrendingUp className="w-3 h-3" />
+          <span className="mono" style={{ fontSize: 11 }}>
+            {summary.total_sold.toLocaleString()} vehicles sold
+          </span>
         </div>
       </div>
 
@@ -201,9 +232,9 @@ export default function Analytics() {
       <div className="grid gap-6 lg:grid-cols-3">
 
         {/* Top Makes horizontal bar */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
+        <div className="lg:col-span-2 card p-5">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h2 className="text-sm font-bold text-white">Best-Selling Makes</h2>
+            <h2 className="text-sm font-bold &">Best-Selling Makes</h2>
             {selectedMake && (
               <button
                 onClick={() => setSelectedMake(null)}
@@ -244,8 +275,8 @@ export default function Analytics() {
                 onClick={() => setSelectedMake(prev => prev === m.make ? null : m.make)}
                 className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
                   selectedMake === m.make
-                    ? 'border-brand-500/50 bg-brand-500/20 text-white'
-                    : 'border-slate-700/50 bg-slate-800/40 text-slate-400 hover:text-white hover:border-slate-600'
+                    ? 'border-brand-500/50 bg-brand-500/20 &'
+                    : 'border-slate-700/50 bg-slate-800/40 text-slate-400 hover:& hover:border-slate-600'
                 }`}
               >
                 <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: BRAND_COLORS[i % BRAND_COLORS.length] }} />
@@ -258,7 +289,7 @@ export default function Analytics() {
           {/* Model drilldown — expands when a make is selected */}
           {selectedMake && make_model_breakdown?.[selectedMake] && make_model_breakdown[selectedMake].length > 0 && (
             <div className="mt-3 border-t border-slate-800 pt-3">
-              <p className="text-xs font-bold text-white mb-2">
+              <p className="text-xs font-bold & mb-2">
                 {selectedMake} — top models sold
               </p>
               <div className="flex flex-wrap gap-2">
@@ -271,7 +302,7 @@ export default function Analytics() {
                       className="flex items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-800/60 px-3 py-2 text-xs"
                     >
                       <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                      <span className="font-bold text-white">{m.model}</span>
+                      <span className="font-bold &">{m.model}</span>
                       <span className="text-slate-400">{m.count} sold</span>
                     </div>
                   )
@@ -282,8 +313,8 @@ export default function Analytics() {
         </div>
 
         {/* Body Style donut */}
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
-          <h2 className="text-sm font-bold text-white mb-1">Body Style Mix</h2>
+        <div className="card p-5">
+          <h2 className="text-sm font-bold & mb-1">Body Style Mix</h2>
           <p className="text-xs text-slate-500 mb-4">sold vehicles by type</p>
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
@@ -305,7 +336,7 @@ export default function Analytics() {
                   <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: BRAND_COLORS[i % BRAND_COLORS.length] }} />
                   <span className="text-slate-400">{b.body_style}</span>
                 </div>
-                <span className="font-semibold text-white">{b.pct}%</span>
+                <span className="font-semibold &">{b.pct}%</span>
               </div>
             ))}
           </div>
@@ -314,10 +345,10 @@ export default function Analytics() {
 
       {/* Best Selling Model Years */}
       {top_years.length > 0 && (
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
+        <div className="card p-5">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div>
-              <h2 className="text-sm font-bold text-white">Best Selling Model Years</h2>
+              <h2 className="text-sm font-bold &">Best Selling Model Years</h2>
               <p className="text-xs text-slate-500 mt-0.5">volume by vehicle model year — newer years reflect franchise new-car sales</p>
             </div>
             <div className="flex items-center gap-3 text-xs">
@@ -358,7 +389,7 @@ export default function Analytics() {
             {[...top_years].sort((a, b) => b.year - a.year).map((y) => (
               <div key={y.year}
                 className="flex items-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-800/40 px-2.5 py-1 text-xs">
-                <span className="font-bold text-white">{y.year}</span>
+                <span className="font-bold &">{y.year}</span>
                 <span className="text-slate-400">{y.count} sold</span>
                 <span className="text-slate-600">·</span>
                 <span className="text-slate-500">{y.pct}%</span>
@@ -372,8 +403,8 @@ export default function Analytics() {
       <div className="grid gap-6 lg:grid-cols-2">
 
         {/* Weekly trend line */}
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
-          <h2 className="text-sm font-bold text-white mb-1">Weekly Sales Trend</h2>
+        <div className="card p-5">
+          <h2 className="text-sm font-bold & mb-1">Weekly Sales Trend</h2>
           <p className="text-xs text-slate-500 mb-4">vehicles leaving the lot per week</p>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -391,8 +422,8 @@ export default function Analytics() {
         </div>
 
         {/* Price distribution */}
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
-          <h2 className="text-sm font-bold text-white mb-1">Price Distribution</h2>
+        <div className="card p-5">
+          <h2 className="text-sm font-bold & mb-1">Price Distribution</h2>
           <p className="text-xs text-slate-500 mb-4">% of sold vehicles by price range</p>
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -413,8 +444,8 @@ export default function Analytics() {
       </div>
 
       {/* Top colors */}
-      <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
-        <h2 className="text-sm font-bold text-white mb-1">Top Exterior Colors</h2>
+      <div className="card p-5">
+        <h2 className="text-sm font-bold & mb-1">Top Exterior Colors</h2>
         <p className="text-xs text-slate-500 mb-4">most popular colors among sold vehicles</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           {top_colors.slice(0, 10).map((c) => (
@@ -433,8 +464,8 @@ export default function Analytics() {
       </div>
 
       {/* Top Models table */}
-      <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
-        <h2 className="text-sm font-bold text-white mb-1">Top Selling Models</h2>
+      <div className="card p-5">
+        <h2 className="text-sm font-bold & mb-1">Top Selling Models</h2>
         <p className="text-xs text-slate-500 mb-4">click any row to see year breakdown</p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -460,7 +491,7 @@ export default function Analytics() {
                     >
                       <td className="py-2.5 text-slate-600 font-mono">{i + 1}</td>
                       <td className="py-2.5">
-                        <span className="font-semibold text-white">{m.make} {m.model}</span>
+                        <span className="font-semibold &">{m.make} {m.model}</span>
                       </td>
                       <td className="py-2.5 text-right">
                         <span className="font-bold text-cyan-400">{m.count}</span>
@@ -477,7 +508,7 @@ export default function Analytics() {
                           <div className="flex flex-wrap gap-2">
                             {years.map((y: { year: number; count: number }) => (
                               <div key={y.year} className="flex items-center gap-1.5 rounded-lg border border-slate-700/50 bg-slate-900/60 px-2.5 py-1 text-xs">
-                                <span className="font-bold text-white">{y.year}</span>
+                                <span className="font-bold &">{y.year}</span>
                                 <span className="text-slate-400">{y.count} sold</span>
                               </div>
                             ))}
@@ -495,8 +526,8 @@ export default function Analytics() {
 
       {/* Location Performance (all-locations only) */}
       {!selectedDealer && location_performance.length > 0 && (
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
-          <h2 className="text-sm font-bold text-white mb-1">Location Performance</h2>
+        <div className="card p-5">
+          <h2 className="text-sm font-bold & mb-1">Location Performance</h2>
           <p className="text-xs text-slate-500 mb-4">all 24 ALM locations ranked by sold volume</p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
@@ -552,9 +583,9 @@ export default function Analytics() {
 
       {/* Franchise: New vs Used Split */}
       {branded_location_split.length > 0 && (
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
+        <div className="card p-5">
           <div className="flex items-center gap-3 mb-1">
-            <h2 className="text-sm font-bold text-white">New vs. Used — Franchise Locations</h2>
+            <h2 className="text-sm font-bold &">New vs. Used — Franchise Locations</h2>
             <span className="rounded-full border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[10px] font-bold text-brand-400 uppercase tracking-wide">
               {branded_location_split.length} Branded Dealers
             </span>
@@ -586,15 +617,15 @@ export default function Analytics() {
                     const d = branded_location_split.find(x => x.name === label)
                     return (
                       <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 shadow-xl text-xs min-w-[180px]">
-                        <p className="font-bold text-white mb-2 text-[11px]">{label}</p>
+                        <p className="font-bold & mb-2 text-[11px]">{label}</p>
                         <div className="space-y-1">
                           <div className="flex justify-between gap-4">
                             <span className="text-emerald-400">New</span>
-                            <span className="font-bold text-white">{d?.new} <span className="text-slate-500 font-normal">({d?.new_pct}%)</span></span>
+                            <span className="font-bold &">{d?.new} <span className="text-slate-500 font-normal">({d?.new_pct}%)</span></span>
                           </div>
                           <div className="flex justify-between gap-4">
                             <span className="text-cyan-400">Used</span>
-                            <span className="font-bold text-white">{d?.used} <span className="text-slate-500 font-normal">({d?.used_pct}%)</span></span>
+                            <span className="font-bold &">{d?.used} <span className="text-slate-500 font-normal">({d?.used_pct}%)</span></span>
                           </div>
                           {d?.avg_new_price ? (
                             <div className="flex justify-between gap-4 pt-1 border-t border-slate-800 mt-1">
@@ -670,12 +701,12 @@ export default function Analytics() {
       )}
 
       {/* Cars to Move */}
-      <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5">
+      <div className="card p-5">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
           <div>
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-400" />
-              <h2 className="text-sm font-bold text-white">Cars to Move</h2>
+              <h2 className="text-sm font-bold &">Cars to Move</h2>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">active units aging past their make's avg · needs attention</p>
           </div>
@@ -716,7 +747,7 @@ export default function Analytics() {
                 {filteredCarsToMove.map((c) => (
                   <tr key={c.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
                     <td className="py-2.5">
-                      <p className="font-semibold text-white">{c.year} {c.make} {c.model}</p>
+                      <p className="font-semibold &">{c.year} {c.make} {c.model}</p>
                       <p className="text-slate-500">{c.stock_number} · {c.exterior_color}</p>
                     </td>
                     <td className="py-2.5 text-slate-400 hidden sm:table-cell">
